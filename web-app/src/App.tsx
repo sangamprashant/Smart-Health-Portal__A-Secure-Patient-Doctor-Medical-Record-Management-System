@@ -10,6 +10,7 @@ import ContactSection from './components/ContactSection'
 import ScanPage from './components/sacn'
 import Login from './components/auth/login'
 import Register from './components/auth/register'
+import { Profile } from './components/user-pages'
 
 function App() {
 
@@ -25,6 +26,9 @@ function App() {
         <Route path='/scan' element={<ScanPage />} />
         <Route path='/login' element={<Login />} />
         <Route path='/register' element={<Register />} />
+        <>
+          <Route path='/profile' element={<Profile />} />
+        </>
       </Routes>
       <Footer />
     </>

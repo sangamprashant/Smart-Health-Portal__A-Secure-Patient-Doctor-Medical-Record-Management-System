@@ -1,92 +1,155 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { ScanLine } from "lucide-react";
+import { Link, NavLink } from "react-router-dom";
+import { ScanLine, UserCircle } from "lucide-react";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
 
-  return (
-    <nav className="bg-blue-900 sticky top-0 z-50">
+  // Demo auth state (replace with context later)
+  const [isLoggedIn] = useState(!false);
 
-      <div className="max-w-7xl mx-auto text-white px-5 py-4 flex justify-between items-center">
+  const navLinks = [
+    { name: "Home", path: "/" },
+    { name: "About", path: "/about" },
+    { name: "Services", path: "/services" },
+    { name: "Contact", path: "/contact" },
+  ];
+
+  return (
+    <nav className="bg-blue-900 sticky top-0 z-50 shadow-md">
+      <div className="max-w-7xl mx-auto px-5 py-4 flex items-center justify-between">
 
         {/* LOGO */}
-        <Link to="/" className="text-xl font-bold">
-          Smart Health Portal
+        <Link to="/" className="flex items-center gap-2 text-white">
+          <div className="w-9 h-9 rounded-xl bg-white text-blue-900 flex items-center justify-center font-bold">
+            SH
+          </div>
+          <span className="text-lg font-bold">
+            Smart Health Portal
+          </span>
         </Link>
 
-        {/* DESKTOP MENU */}
-        <ul className="hidden md:flex items-center gap-8 font-medium">
+        {/* DESKTOP LINKS */}
+        <ul className="hidden md:flex items-center gap-8 font-medium text-white">
+          {navLinks.map((link) => (
+            <li key={link.path}>
+              <NavLink
+                to={link.path}
+                className={({ isActive }) =>
+                  `transition hover:text-blue-200 ${isActive ? "text-blue-200 font-semibold" : ""
+                  }`
+                }
+              >
+                {link.name}
+              </NavLink>
+            </li>
+          ))}
+        </ul>
 
-          <Link to="/" className="hover:text-blue-200">
-            Home
-          </Link>
+        {/* DESKTOP ACTIONS */}
+        <div className="hidden md:flex items-center gap-3">
+          {/* Auth */}
+          {isLoggedIn ? (
+            <Link
+              to="/profile"
+              className="flex items-center gap-2 text-white hover:text-blue-200 transition"
+            >
+              <UserCircle size={22} />
+              Profile
+            </Link>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="px-4 py-2 rounded-lg border border-white text-white hover:bg-white hover:text-blue-900 transition"
+              >
+                Login
+              </Link>
 
-          <Link to="/about" className="hover:text-blue-200">
-            About
-          </Link>
-
-          <Link to="/services" className="hover:text-blue-200">
-            Services
-          </Link>
-
-          <Link to="/contact" className="hover:text-blue-200">
-            Contact
-          </Link>
-
-          {/* SCAN BUTTON */}
+              <Link
+                to="/register"
+                className="px-4 py-2 rounded-lg bg-blue-700 text-white font-semibold hover:bg-blue-600 transition"
+              >
+                Register
+              </Link>
+            </>
+          )}
+          {/* Scan QR */}
           <Link
             to="/scan"
-            className="flex items-center gap-2 bg-white text-blue-900 px-4 py-2 rounded-md font-semibold hover:bg-blue-100 transition"
+            className="flex items-center gap-2 bg-white text-blue-900 px-4 py-2 rounded-lg font-semibold hover:bg-blue-100 transition"
           >
             <ScanLine size={18} />
             Scan QR
           </Link>
-        </ul>
+        </div>
 
-        {/* MOBILE BUTTON */}
+        {/* MOBILE TOGGLE */}
         <button
           onClick={() => setOpen(!open)}
-          className="md:hidden text-3xl"
+          className="md:hidden text-3xl text-white"
         >
           {open ? "✕" : "☰"}
         </button>
-
       </div>
 
       {/* MOBILE MENU */}
       {open && (
-        <div className="md:hidden bg-blue-950 text-white px-6 pb-6 space-y-4">
+        <div className="md:hidden bg-blue-950 text-white px-6 py-6 space-y-4">
 
-          <Link to="/" onClick={() => setOpen(false)} className="block">
-            Home
-          </Link>
+          {navLinks.map((link) => (
+            <NavLink
+              key={link.path}
+              to={link.path}
+              onClick={() => setOpen(false)}
+              className="block font-medium hover:text-blue-200"
+            >
+              {link.name}
+            </NavLink>
+          ))}
 
-          <Link to="/about" onClick={() => setOpen(false)} className="block">
-            About
-          </Link>
+          <div className="pt-4 border-t border-blue-800 space-y-3">
 
-          <Link to="/services" onClick={() => setOpen(false)} className="block">
-            Services
-          </Link>
+            <Link
+              to="/scan"
+              onClick={() => setOpen(false)}
+              className="flex items-center justify-center gap-2 bg-white text-blue-900 py-2 rounded-lg font-semibold"
+            >
+              <ScanLine size={18} />
+              Scan QR
+            </Link>
 
-          <Link to="/contact" onClick={() => setOpen(false)} className="block">
-            Contact
-          </Link>
+            {isLoggedIn ? (
+              <Link
+                to="/profile"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-center gap-2 border border-white py-2 rounded-lg"
+              >
+                <UserCircle size={20} />
+                Profile
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  onClick={() => setOpen(false)}
+                  className="block text-center border border-white py-2 rounded-lg hover:bg-white hover:text-blue-900 transition"
+                >
+                  Login
+                </Link>
 
-          {/* MOBILE SCAN BUTTON */}
-          <Link
-            to="/scan"
-            onClick={() => setOpen(false)}
-            className="flex items-center justify-center gap-2 bg-white text-blue-900 py-2 rounded-md font-semibold"
-          >
-            <ScanLine size={18} />
-            Scan QR
-          </Link>
-
+                <Link
+                  to="/register"
+                  onClick={() => setOpen(false)}
+                  className="block text-center bg-blue-700 py-2 rounded-lg font-semibold hover:bg-blue-600 transition"
+                >
+                  Register
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       )}
-
     </nav>
   );
 };
