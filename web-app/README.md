@@ -1,73 +1,284 @@
-# React + TypeScript + Vite
+# 🏥 Smart Health Portal
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Emergency QR Code Scanner Module
 
-Currently, two official plugins are available:
+**Project Title:**
+**Smart Health Portal – A Secure Patient–Doctor Medical Record Management System**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## 📘 Overview
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+The Smart Health Portal is a healthcare-focused web application designed to securely manage patient–doctor medical records.
+This module introduces a **modern QR code–based emergency scanning system**, enabling instant access to patient medical information during emergencies.
 
-## Expanding the ESLint configuration
+The QR Scanner is built using **secure web camera APIs**, ensuring privacy, speed, and real-time verification across devices.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🚀 Features Implemented
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### 📸 Camera-Based QR Scanning
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+* Real-time QR code scanning
+* Uses device camera via browser APIs
+* Fast and accurate detection
+* Works on laptop and mobile devices
+
+---
+
+### 🔄 Multi-Camera Support
+
+* Front camera support
+* Back camera support
+* Smooth camera switching
+* Automatic camera re-synchronization
+
+---
+
+### 🪞 Front Camera Mirroring
+
+* Front camera preview mirrored for natural selfie view
+* Back camera remains normal
+* Scan decoding remains unaffected
+
+---
+
+### 🔳 Square Scanner UI
+
+* Fixed 1:1 square scanning area
+* Professional scanner layout
+* Focused QR detection zone
+* Reduces background distraction
+
+---
+
+### 🎯 Modern UI Enhancements
+
+* Dark overlay background
+* Green corner scan frame
+* Animated scan laser
+* Smooth transitions
+* Professional hospital-grade interface
+
+---
+
+### 🔁 Camera Switching UX
+
+* Smooth placeholder during camera switch
+* “Switching camera…” loading indicator
+* No flicker or broken layout
+
+---
+
+### 📱 Mobile Optimized
+
+* Fully responsive design
+* Optimized for emergency use
+* Works smoothly on Android mobile browsers
+
+---
+
+## 🔐 HTTPS & Camera Security
+
+Modern browsers allow camera access **only in secure contexts**.
+
+Camera access is permitted on:
+
+* ✅ `https://domain`
+* ✅ `http://localhost`
+
+Camera access is blocked on:
+
+* ❌ `http://192.168.x.x`
+* ❌ `http://172.x.x.x`
+
+To enable camera usage on local networks, this project uses **mkcert**.
+
+---
+
+## 🛠️ mkcert Setup (Local HTTPS)
+
+### Why mkcert?
+
+mkcert creates locally trusted SSL certificates, allowing:
+
+* Camera access on LAN
+* Mobile testing
+* Secure browser context
+
+---
+
+### 📌 Installation (Windows)
+
+#### Install mkcert
+
+```powershell
+choco install mkcert
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+If Chocolatey is not installed:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force
+iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+```
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
+Then:
+
+```powershell
+choco install mkcert
+```
+
+---
+
+### 📌 Install Local CA
+
+```powershell
+mkcert -install
+```
+
+Expected output:
+
+```
+The local CA is now installed in the system trust store!
+```
+
+---
+
+### 📌 Generate Certificate
+
+Replace with your local IP:
+
+```powershell
+mkcert localhost 172.24.63.177
+```
+
+Generated files:
+
+```
+localhost+2.pem
+localhost+2-key.pem
+```
+
+---
+
+### 📌 Configure Vite HTTPS
+
+Create folder:
+
+```
+/web-app/cert
+```
+
+Rename:
+
+```
+localhost+2.pem       → cert.pem
+localhost+2-key.pem   → key.pem
+```
+
+Update `vite.config.ts`:
+
+```ts
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import fs from "fs";
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    host: true,
+    https: {
+      key: fs.readFileSync("./cert/key.pem"),
+      cert: fs.readFileSync("./cert/cert.pem"),
     },
   },
-])
+});
 ```
+
+---
+
+### ▶ Run Secure Server
+
+```bash
+npm run dev -- --host
+```
+
+Open:
+
+```
+https://172.24.63.177:5173
+```
+
+Verify:
+
+```js
+window.isSecureContext
+```
+
+Output should be:
+
+```
+true
+```
+
+---
+
+## 🧠 Technical Stack
+
+* **Frontend:** React + TypeScript
+* **Styling:** Tailwind CSS
+* **QR Engine:** html5-qrcode
+* **Icons:** Lucide React
+* **Build Tool:** Vite
+* **Security:** HTTPS (mkcert)
+
+---
+
+## 📂 Files Modified
+
+```
+src/pages/ScanPage.tsx
+tailwind.config.js
+vite.config.ts
+```
+
+---
+
+## 🔍 How It Works
+
+1. User opens Emergency QR Scanner
+2. Secure camera permission is requested
+3. User starts scanning
+4. Square scanning frame appears
+5. QR code is detected in real time
+6. QR data is displayed
+7. (Future) Data sent to backend for medical record verification
+
+---
+
+## 🧪 Tested On
+
+* ✅ Laptop webcam
+* ✅ Android mobile browser
+* ✅ Local network (HTTPS)
+* ✅ Chrome / Edge
+
+---
+
+## 🎓 Academic Value
+
+This module demonstrates:
+
+* Real-world browser security handling
+* HTTPS-based camera integration
+* Emergency healthcare system design
+* Advanced UI/UX engineering
+* Real-time device interaction
+
+Ideal for:
+
+* MCA Final Semester Project
+* Viva demonstration
+* Healthcare system prototype
