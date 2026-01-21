@@ -20,12 +20,12 @@ This project is designed as a **practical, real-world healthcare management solu
 
 Current medical record systems face the following issues:
 
-* Medical records are stored in **physical files or isolated systems**
-* No **instant access** during emergencies
-* Patients often forget or lose past medical history
-* Doctors lack **complete patient context**
-* Poor **data security and privacy control**
-* No centralized, role-based access system
+- Medical records are stored in **physical files or isolated systems**
+- No **instant access** during emergencies
+- Patients often forget or lose past medical history
+- Doctors lack **complete patient context**
+- Poor **data security and privacy control**
+- No centralized, role-based access system
 
 ---
 
@@ -33,23 +33,23 @@ Current medical record systems face the following issues:
 
 The **Smart Health Portal** provides:
 
-* A **centralized digital medical record system**
-* Secure **patient-controlled data storage**
-* **Doctor access on authorization**
-* **Emergency access via QR code / unique patient ID**
-* Fast retrieval of **allergies, chronic conditions, and medications**
+- A **centralized digital medical record system**
+- Secure **patient-controlled data storage**
+- **Doctor access on authorization**
+- **Emergency access via QR code / unique patient ID**
+- Fast retrieval of **allergies, chronic conditions, and medications**
 
 ---
 
 ## **5. Objectives of the Project**
 
-* To design a **secure medical record management system**
-* To allow patients to **store, update, and manage** health data
-* To enable doctors to **access patient records with permission**
-* To provide **quick access during emergencies**
-* To implement **role-based authentication**
-* To ensure **data privacy and security**
-* To create a **scalable and user-friendly web application**
+- To design a **secure medical record management system**
+- To allow patients to **store, update, and manage** health data
+- To enable doctors to **access patient records with permission**
+- To provide **quick access during emergencies**
+- To implement **role-based authentication**
+- To ensure **data privacy and security**
+- To create a **scalable and user-friendly web application**
 
 ---
 
@@ -57,44 +57,41 @@ The **Smart Health Portal** provides:
 
 ### **In Scope**
 
-* Patient registration & profile management
-* Medical record upload (reports, prescriptions, allergies)
-* Doctor access with permission
-* Emergency data view (read-only)
-* Secure authentication system
-* CRUD operations for records
+- Patient registration & profile management
+- Medical record upload (reports, prescriptions, allergies)
+- Doctor access with permission
+- Emergency data view (read-only)
+- Secure authentication system
+- CRUD operations for records
 
 ### **Out of Scope**
 
-* AI diagnosis
-* Real hospital integration
-* Insurance & billing systems
-* Live medical device data
+- AI diagnosis
+- Real hospital integration
+- Insurance & billing systems
+- Live medical device data
 
 ---
 
 ## **7. System Users**
 
 1. **Patient**
-
-   * Register & login
-   * Upload medical records
-   * Manage allergies & conditions
-   * Grant/revoke doctor access
-   * Generate emergency QR code
+   - Register & login
+   - Upload medical records
+   - Manage allergies & conditions
+   - Grant/revoke doctor access
+   - Generate emergency QR code
 
 2. **Doctor**
-
-   * Login with verification
-   * Search patients (with access)
-   * View medical history
-   * Add medical notes / prescriptions
+   - Login with verification
+   - Search patients (with access)
+   - View medical history
+   - Add medical notes / prescriptions
 
 3. **Admin**
-
-   * Verify doctors
-   * Manage users
-   * Monitor system activity
+   - Verify doctors
+   - Manage users
+   - Monitor system activity
 
 ---
 
@@ -102,36 +99,36 @@ The **Smart Health Portal** provides:
 
 ### **Patient Module**
 
-* User registration & login
-* Profile management
-* Upload medical documents
-* View & update medical history
-* Emergency profile generation
-* QR / Unique ID creation
+- User registration & login
+- Profile management
+- Upload medical documents
+- View & update medical history
+- Emergency profile generation
+- QR / Unique ID creation
 
 ### **Doctor Module**
 
-* Doctor authentication
-* Patient record access (authorized)
-* View emergency details
-* Add diagnosis notes
+- Doctor authentication
+- Patient record access (authorized)
+- View emergency details
+- Add diagnosis notes
 
 ### **Admin Module**
 
-* Doctor approval
-* User management
-* System monitoring
+- Doctor approval
+- User management
+- System monitoring
 
 ---
 
 ## **9. Non-Functional Requirements**
 
-* High security & data privacy
-* Fast response time
-* Scalable architecture
-* User-friendly UI
-* Secure authentication (JWT)
-* Database backup & integrity
+- High security & data privacy
+- Fast response time
+- Scalable architecture
+- User-friendly UI
+- Secure authentication (JWT)
+- Database backup & integrity
 
 ---
 
@@ -139,32 +136,32 @@ The **Smart Health Portal** provides:
 
 ### **Frontend**
 
-* React.js
-* Tailwind CSS / Bootstrap
-* Axios
+- React.js
+- Tailwind CSS / Bootstrap
+- Axios
 
 ### **Backend**
 
-* Node.js
-* Express.js
-* REST APIs
+- Node.js
+- Express.js
+- REST APIs
 
 ### **Database**
 
-* MongoDB (NoSQL)
-* Mongoose ORM
+- MongoDB (NoSQL)
+- Mongoose ORM
 
 ### **Security**
 
-* JWT Authentication
-* Password hashing (bcrypt)
-* Role-based access
+- JWT Authentication
+- Password hashing (bcrypt)
+- Role-based access
 
 ### **Deployment**
 
-* Frontend: Vercel
-* Backend: Render / Railway
-* Database: MongoDB Atlas
+- Frontend: Vercel
+- Backend: Render / Railway
+- Database: MongoDB Atlas
 
 ---
 
@@ -196,52 +193,56 @@ MongoDB Database
 
 ### **Collections**
 
-* Users
-* Patients
-* Doctors
-* MedicalRecords
-* AccessLogs
+- Users
+- Patients
+- Doctors
+- MedicalRecords
+- AccessLogs
 
 ---
 
 ## **14. Security Features**
 
-* Encrypted passwords
-* JWT-based authentication
-* Role-based authorization
-* Controlled emergency access
-* Activity logging
+- Encrypted passwords
+- JWT-based authentication
+- Role-based authorization
+- Controlled emergency access
+- Activity logging
 
 ---
 
 ## **15. Advantages of the System**
 
-* Fast emergency medical access
-* Reduced paperwork
-* Improved diagnosis accuracy
-* Secure data handling
-* Centralized medical history
-* Scalable for future expansion
+- Fast emergency medical access
+- Reduced paperwork
+- Improved diagnosis accuracy
+- Secure data handling
+- Centralized medical history
+- Scalable for future expansion
 
 ---
 
 ## **16. Limitations**
 
-* Requires internet connectivity
-* Depends on user data accuracy
-* Not integrated with hospitals yet
+- Requires internet connectivity
+- Depends on user data accuracy
+- Not integrated with hospitals yet
 
 ---
 
 ## **17. Future Enhancements**
 
-* Mobile app (React Native)
-* Biometric authentication
-* Cloud file encryption
-* AI-based health suggestions
-* Hospital & lab integration
+- Mobile app (React Native)
+- Biometric authentication
+- Cloud file encryption
+- AI-based health suggestions
+- Hospital & lab integration
 
 ---
+
+## **Project UI**
+
+## <img src="./assets/images/home-page.png" alt=""  width="100%" />
 
 ## **18. Conclusion**
 

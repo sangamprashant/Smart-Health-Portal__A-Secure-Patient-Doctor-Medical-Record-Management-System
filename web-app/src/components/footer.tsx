@@ -113,19 +113,23 @@ const Footer = () => {
 
       </div>
 
-      {/* DIVIDER */}
       <div className="border-t border-blue-800 mt-12"></div>
-
-      {/* BOTTOM FOOTER */}
       <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row justify-between items-center text-sm text-gray-400">
-
-        <p>
-          Designed & Developed by
-          <span className="text-white font-semibold">
-            {" "}
-            Prashant Srivastav
-          </span>
-        </p>
+        <div className="text-center md:text-left space-y-1">
+          <p>
+            Designed & Developed by
+            <span className="text-white font-semibold">
+              {" "}
+              Prashant Srivastav
+            </span>
+          </p>
+          <p className="text-gray-300 text-sm">
+            MCA Student,{" "}
+            <span className="text-white font-medium">
+              Babu Banarasi Das University (BBDU), Lucknow
+            </span>
+          </p>
+        </div>
 
         <div className="flex gap-4 mt-4 md:mt-0">
           <span className="hover:text-white cursor-pointer">
@@ -138,7 +142,6 @@ const Footer = () => {
             Support
           </span>
         </div>
-
       </div>
     </footer>
   );

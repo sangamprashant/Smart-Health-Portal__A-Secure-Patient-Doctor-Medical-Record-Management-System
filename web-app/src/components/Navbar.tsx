@@ -1,12 +1,9 @@
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
-import { ScanLine, UserCircle } from "lucide-react";
+import { ScanLine } from "lucide-react";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
-
-  // Demo auth state (replace with context later)
-  const [isLoggedIn] = useState(!false);
 
   const navLinks = [
     { name: "Home", path: "/" },
@@ -48,33 +45,19 @@ const Navbar = () => {
 
         {/* DESKTOP ACTIONS */}
         <div className="hidden md:flex items-center gap-3">
-          {/* Auth */}
-          {isLoggedIn ? (
-            <Link
-              to="/profile"
-              className="flex items-center gap-2 text-white hover:text-blue-200 transition"
-            >
-              <UserCircle size={22} />
-              Profile
-            </Link>
-          ) : (
-            <>
-              <Link
-                to="/login"
-                className="px-4 py-2 rounded-lg border border-white text-white hover:bg-white hover:text-blue-900 transition"
-              >
-                Login
-              </Link>
+          <Link
+            to="/login"
+            className="px-4 py-2 rounded-lg border border-white text-white hover:bg-white hover:text-blue-900 transition"
+          >
+            Login
+          </Link>
 
-              <Link
-                to="/register"
-                className="px-4 py-2 rounded-lg bg-blue-700 text-white font-semibold hover:bg-blue-600 transition"
-              >
-                Register
-              </Link>
-            </>
-          )}
-          {/* Scan QR */}
+          <Link
+            to="/register"
+            className="px-4 py-2 rounded-lg bg-blue-700 text-white font-semibold hover:bg-blue-600 transition"
+          >
+            Register
+          </Link>
           <Link
             to="/scan"
             className="flex items-center gap-2 bg-white text-blue-900 px-4 py-2 rounded-lg font-semibold hover:bg-blue-100 transition"
@@ -118,35 +101,21 @@ const Navbar = () => {
               <ScanLine size={18} />
               Scan QR
             </Link>
+            <Link
+              to="/login"
+              onClick={() => setOpen(false)}
+              className="block text-center border border-white py-2 rounded-lg hover:bg-white hover:text-blue-900 transition"
+            >
+              Login
+            </Link>
 
-            {isLoggedIn ? (
-              <Link
-                to="/profile"
-                onClick={() => setOpen(false)}
-                className="flex items-center justify-center gap-2 border border-white py-2 rounded-lg"
-              >
-                <UserCircle size={20} />
-                Profile
-              </Link>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  onClick={() => setOpen(false)}
-                  className="block text-center border border-white py-2 rounded-lg hover:bg-white hover:text-blue-900 transition"
-                >
-                  Login
-                </Link>
-
-                <Link
-                  to="/register"
-                  onClick={() => setOpen(false)}
-                  className="block text-center bg-blue-700 py-2 rounded-lg font-semibold hover:bg-blue-600 transition"
-                >
-                  Register
-                </Link>
-              </>
-            )}
+            <Link
+              to="/register"
+              onClick={() => setOpen(false)}
+              className="block text-center bg-blue-700 py-2 rounded-lg font-semibold hover:bg-blue-600 transition"
+            >
+              Register
+            </Link>
           </div>
         </div>
       )}
