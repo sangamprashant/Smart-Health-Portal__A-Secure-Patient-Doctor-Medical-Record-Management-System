@@ -9,8 +9,8 @@ export default defineConfig({
    server: {
     host: true,
     https: {
-      key: fs.readFileSync("localhost+1-key.pem"),
-      cert: fs.readFileSync("localhost+1.pem"),
+      key: fs.readFileSync("smarthealth.local-key.pem"),
+      cert: fs.readFileSync("smarthealth.local.pem"),
     },
   },
 });
