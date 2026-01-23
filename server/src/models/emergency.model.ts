@@ -2,10 +2,8 @@ import mongoose, { Document, Schema } from "mongoose";
 
 export interface IEmergencyAccess extends Document {
   patientId: mongoose.Types.ObjectId;
-
-  qrCodeId: string; 
+  qrCodeId: string;
   emergencyNotes?: string;
-
   active: boolean;
   createdAt: Date;
 }
@@ -33,12 +31,12 @@ const emergencySchema: Schema<IEmergencyAccess> = new Schema(
       default: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const EmergencyAccess = mongoose.model<IEmergencyAccess>(
   "EmergencyAccess",
-  emergencySchema
+  emergencySchema,
 );
 
 export default EmergencyAccess;

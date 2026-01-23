@@ -8,7 +8,7 @@ app.use(cors());
 app.use(express.json());
 
 /* Routes */
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
   res.send("Smart Health Portal API Running...");
 });
 

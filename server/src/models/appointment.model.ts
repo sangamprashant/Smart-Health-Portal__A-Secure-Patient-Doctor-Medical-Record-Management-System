@@ -3,10 +3,8 @@ import mongoose, { Document, Schema } from "mongoose";
 export interface IAppointment extends Document {
   patientId: mongoose.Types.ObjectId;
   doctorId: mongoose.Types.ObjectId;
-
   appointmentDate: Date;
   status: "pending" | "approved" | "completed" | "cancelled";
-
   createdAt: Date;
 }
 

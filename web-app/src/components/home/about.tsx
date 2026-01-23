@@ -4,16 +4,11 @@ const About = () => {
   return (
     <Scroll>
       <section className="py-20 bg-slate-50">
-
         <div className="max-w-7xl mx-auto px-5 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-
-          {/* LEFT CONTENT */}
           <div className="text-center md:text-left">
-
             <p className="text-blue-900 font-semibold mb-2">
               ABOUT SMART HEALTH
             </p>
-
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 leading-snug">
               Digital Healthcare Designed <br />
               For Patients & Doctors
@@ -26,7 +21,6 @@ const About = () => {
               Our goal is to make healthcare accessible, fast, and paperless.
             </p>
 
-            {/* FEATURES */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6 text-left">
 
               <div className="flex items-start gap-3">
@@ -56,10 +50,8 @@ const About = () => {
             </button>
           </div>
 
-          {/* RIGHT IMAGES */}
           <div className="relative flex justify-center gap-6">
 
-            {/* IMAGE 1 */}
             <div className="w-44 sm:w-52 md:w-56 h-64 md:h-72 rounded-xl overflow-hidden shadow-md">
               <img
                 src="/doctor-2.png"
@@ -68,7 +60,6 @@ const About = () => {
               />
             </div>
 
-            {/* IMAGE 2 */}
             <div className="w-44 sm:w-52 md:w-56 h-64 md:h-72 rounded-xl overflow-hidden shadow-md mt-8">
               <img
                 src="/doctor-3.png"
@@ -77,16 +68,13 @@ const About = () => {
               />
             </div>
 
-            {/* EXPERIENCE BADGE */}
             <div className="absolute bottom-0 right-2 sm:right-6 bg-blue-900 text-white px-6 py-4 rounded-xl shadow-lg">
               <h3 className="text-3xl font-bold">20+</h3>
               <p className="text-sm">Years of Medical Experience</p>
             </div>
 
           </div>
-
         </div>
-
       </section>
     </Scroll>
   );

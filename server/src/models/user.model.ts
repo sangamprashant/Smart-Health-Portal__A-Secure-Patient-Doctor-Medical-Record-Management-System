@@ -26,10 +26,9 @@ const userSchema: Schema<IUser> = new Schema(
       default: "patient",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-/* Hash Password Before Save */
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
 
@@ -37,7 +36,6 @@ userSchema.pre("save", async function () {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-/* Compare Password */
 userSchema.methods.comparePassword = async function (password: string) {
   return await bcrypt.compare(password, this.password);
 };

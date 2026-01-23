@@ -8,6 +8,7 @@ import https from "https";
 import fs from "fs";
 
 import path from "path";
+import os from "os";
 
 const keyPath = path.join(__dirname, "../smarthealth.local-key.pem");
 const certPath = path.join(__dirname, "../smarthealth.local.pem");
@@ -22,6 +23,21 @@ const startServer = async () => {
     if (process.env.USE_HTTPS === "true") {
       const key = fs.readFileSync(keyPath);
       const cert = fs.readFileSync(certPath);
+
+      function getLocalIP() {
+        const nets = os.networkInterfaces();
+        for (const name of Object.keys(nets)) {
+          for (const net of nets[name] || []) {
+            if (net.family === "IPv4" && !net.internal) {
+              return net.address;
+            }
+          }
+        }
+        return "localhost";
+      }
+
+      const ip = getLocalIP();
+      console.log(`Mobile Portal: https://${ip}:${PORT}`);
 
       https.createServer({ key, cert }, app).listen(PORT, HOST, () => {
         console.log(`HTTPS Server running at: https://localhost:${PORT}`);

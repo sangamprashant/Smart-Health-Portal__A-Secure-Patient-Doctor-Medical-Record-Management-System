@@ -40,7 +40,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     <AuthContext.Provider
       value={{
         user,
-        isLoggedIn: user !== null,
+        isLoggedIn:( user !== null),
         login,
         logout,
       }}
