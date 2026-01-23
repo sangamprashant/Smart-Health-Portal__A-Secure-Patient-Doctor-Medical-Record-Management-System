@@ -16,7 +16,18 @@ import { useAuth } from './providers/userProvider'
 function App() {
   const { isLoggedIn } = useAuth()
 
+  const userRole: Role = "admin"
+
+  const roles: Role[] = ["admin", "doctor", "patient"]
+
   if (!isLoggedIn) {
+
+    if (!roles.includes(userRole)) {
+      return <>
+        <PageNotFound />
+      </>
+    }
+
     return (
       <Layout>
         <Routes>
