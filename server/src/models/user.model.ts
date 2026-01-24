@@ -8,18 +8,14 @@ export interface IUser extends Document {
   email: string;
   password: string;
   role: UserRole;
-
   comparePassword(password: string): Promise<boolean>;
 }
 
 const userSchema: Schema<IUser> = new Schema(
   {
     fullName: { type: String, required: true },
-
     email: { type: String, required: true, unique: true },
-
     password: { type: String, required: true },
-
     role: {
       type: String,
       enum: ["patient", "doctor", "admin"],
