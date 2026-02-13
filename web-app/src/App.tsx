@@ -15,7 +15,7 @@ import { useAuth } from './providers/userProvider'
 function App() {
   const { isLoggedIn } = useAuth()
 
-  if (!isLoggedIn) {
+  if (isLoggedIn) {
     return (
       <Routes>
         <Route path='/profile' element={<Profile />} />
