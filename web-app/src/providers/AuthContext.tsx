@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import _env from "../utils/_env";
+// import _env from "../utils/_env";
 
 type User = {
   _id: string;
@@ -18,7 +18,7 @@ type User = {
     country?: string;
   };
   patientId?: string;
-  notifications:boolean;
+  notifications: boolean;
 }
 
 type AuthContextType = {
@@ -35,41 +35,73 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
-  useEffect(() => {
-    const initAuth = async () => {
-      const storedToken = sessionStorage.getItem("token");
+  // useEffect(() => {
+  //   const initAuth = async () => {
+  //     const storedToken = sessionStorage.getItem("token");
 
-      if (!storedToken) {
-        logout();
-        return;
-      }
+  //     if (!storedToken) {
+  //       logout();
+  //       return;
+  //     }
 
-      try {
-        const res = await fetch(`${_env.SERVER_URL}/user/me`, {
-          headers: {
-            Authorization: `Bearer ${storedToken}`,
-          },
-        });
+  //     try {
+  //       const res = await fetch(`${_env.SERVER_URL}/user/me`, {
+  //         headers: {
+  //           Authorization: `Bearer ${storedToken}`,
+  //         },
+  //       });
 
-        if (!res.ok) {
-          throw new Error("Invalid token");
-        }
+  //       if (!res.ok) {
+  //         throw new Error("Invalid token");
+  //       }
 
-        const data = await res.json();
+  //       const data = await res.json();
 
-        setToken(storedToken);
-        setUser(data);
+  //       setToken(storedToken);
+  //       setUser(data);
 
-        sessionStorage.setItem("user", JSON.stringify(data));
+  //       sessionStorage.setItem("user", JSON.stringify(data));
 
-      } catch (error) {
-        console.log("Auto logout: invalid session");
-        logout();
-      }
+  //     } catch (_:unknown) {
+  //       console.log("Auto logout: invalid session");
+  //       logout();
+  //     }
+  //   };
+
+  //   initAuth();
+  // }, []);
+
+    useEffect(() => {
+    // 🔥 DUMMY DATA (replace later when backend is ready)
+    const dummyUser: User = {
+      _id: "p1",
+      fullName: "Prashant Srivastav",
+      email: "prashant@example.com",
+      password: "hashed_password",
+      role: "patient",
+      profile_image: "",
+      gender: "male",
+      age: 24,
+      phone: "9876543210",
+      address: {
+        city: "Noida",
+        state: "Uttar Pradesh",
+        country: "India",
+      },
+      patientId: "PAT001",
+      notifications: true,
     };
 
-    initAuth();
+    const dummyToken = "dummy-jwt-token";
+
+    // Simulate login
+    setUser(dummyUser);
+    setToken(dummyToken);
+
+    sessionStorage.setItem("token", dummyToken);
+    sessionStorage.setItem("user", JSON.stringify(dummyUser));
   }, []);
+
 
   const login = (token: string, user: User) => {
     setToken(token);
