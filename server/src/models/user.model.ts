@@ -8,22 +8,90 @@ export interface IUser extends Document {
   email: string;
   password: string;
   role: UserRole;
+
+  // 🔥 New fields
+  profile_image?: string;
+  gender?: "male" | "female" | "other";
+  dateOfBirth?: Date;
+  age?: number;
+
+  phone?: string;
+
+  address?: {
+    city?: string;
+    state?: string;
+    country?: string;
+  };
+
+  patientId?: string;
+
+  notifications: boolean;
+
   comparePassword(password: string): Promise<boolean>;
 }
 
 const userSchema: Schema<IUser> = new Schema(
   {
     fullName: { type: String, required: true },
+
     email: { type: String, required: true, unique: true },
+
     password: { type: String, required: true },
+
     role: {
       type: String,
       enum: ["patient", "doctor", "admin"],
       default: "patient",
     },
+
+    profile_image: {
+      type: String,
+      default: "",
+    },
+
+    gender: {
+      type: String,
+      enum: ["male", "female", "other"],
+    },
+
+    dateOfBirth: {
+      type: Date,
+    },
+
+    age: {
+      type: Number,
+    },
+
+    phone: {
+      type: String,
+    },
+
+    address: {
+      city: String,
+      state: String,
+      country: String,
+    },
+
+    patientId: {
+      type: String,
+      unique: true,
+    },
+
+    notifications: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true },
 );
+
+userSchema.pre("save", function (next) {
+  if (!this.patientId) {
+    const year = new Date().getFullYear();
+    const random = Math.floor(100 + Math.random() * 900);
+    this.patientId = `SHP-${year}-${random}`;
+  }
+});
 
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;

@@ -1,6 +1,10 @@
 import express from "express";
 import cors from "cors";
 import authRoutes from "./routes/auth.routes";
+import userRoutes from "./routes/user.routes";
+import adminRoutes from "./routes/admin.routes";
+import settingsRoutes from "./routes/settings.routes";
+import healthRoutes from "./routes/health.routes";
 
 const app = express();
 
@@ -34,5 +38,9 @@ app.get("/", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/user", userRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/settings", settingsRoutes);
+app.use("/api/health", healthRoutes);
 
 export default app;

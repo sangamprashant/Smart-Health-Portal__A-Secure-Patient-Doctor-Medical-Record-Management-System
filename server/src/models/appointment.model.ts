@@ -1,35 +1,58 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Schema, Document } from "mongoose";
 
 export interface IAppointment extends Document {
   patientId: mongoose.Types.ObjectId;
   doctorId: mongoose.Types.ObjectId;
-  appointmentDate: Date;
-  status: "pending" | "approved" | "completed" | "cancelled";
+
+  date: Date;
+  time: string;
+  slotKey:string;
+
+  reason: string;
+
+  status: "pending" | "confirmed" | "completed" | "cancelled";
+
   createdAt: Date;
+  updatedAt: Date;
 }
 
 const appointmentSchema: Schema<IAppointment> = new Schema(
   {
     patientId: {
-      type: Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
 
     doctorId: {
-      type: Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
 
-    appointmentDate: {
+    date: {
       type: Date,
+      required: true,
+    },
+
+    time: {
+      type: String,
+      required: true,
+    },
+
+    slotKey: {
+      type: String, // e.g. "2026-04-08_10:15"
+      required: true,
+    },
+
+    reason: {
+      type: String,
       required: true,
     },
 
     status: {
       type: String,
-      enum: ["pending", "approved", "completed", "cancelled"],
+      enum: ["pending", "confirmed", "completed", "cancelled"],
       default: "pending",
     },
   },

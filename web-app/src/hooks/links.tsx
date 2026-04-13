@@ -11,12 +11,13 @@ import {
 export const getMenuItems = (role: Role) => {
     const base = `/${role}`;
 
+    console.log({base})
+
     if (role === "admin") {
         return [
             { icon: <LayoutDashboard size={20} />, label: "Dashboard", path: `${base}/dashboard` },
             { icon: <Users size={20} />, label: "Doctors", path: `${base}/doctors` },
             { icon: <Users size={20} />, label: "Patients", path: `${base}/patients` },
-            { icon: <CalendarDays size={20} />, label: "Appointments", path: `${base}/appointments` },
             { icon: <Settings size={20} />, label: "Settings", path: `${base}/settings` },
         ];
     }
@@ -32,7 +33,6 @@ export const getMenuItems = (role: Role) => {
     }
 
     return [
-        { icon: <LayoutDashboard size={20} />, label: "Dashboard", path: `${base}/dashboard` },
         { icon: <User size={20} />, label: "My Profile", path: `${base}/profile` },
         { icon: <CalendarDays size={20} />, label: "My Appointments", path: `${base}/appointments` },
         { icon: <ClipboardList size={20} />, label: "My Reports", path: `${base}/reports` },
