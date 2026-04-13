@@ -13,7 +13,7 @@ import ScanPage from './components/sacn';
 import { Profile } from './components/user-pages';
 import { useAuth } from './providers/AuthContext';
 import { AdminUser } from './components/Admin';
-import { Settings } from './components/common';
+import { Appointments, Settings } from './components/common';
 
 function App() {
   const { user } = useAuth();
@@ -29,6 +29,8 @@ function App() {
           <Route path='/admin/doctors' element={<AdminUser type="doctor" />} />
           <Route path='/admin/patients' element={<AdminUser type="patient" />} />
           <Route path="/:role/settings" element={<Settings />} />
+          {/* TODO: check patient and doctor pannel then by role   */}
+          <Route path="/:role/appointments" element={<Appointments />} />
           <Route path="*" element={<PageNotFound />} />
         </Routes>
       </Layout>
