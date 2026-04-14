@@ -3,6 +3,7 @@ import {
     ClipboardList,
     FileText,
     LayoutDashboard,
+    MessageCircle,
     Settings,
     User,
     Users,
@@ -11,7 +12,7 @@ import {
 export const getMenuItems = (role: Role) => {
     const base = `/${role}`;
 
-    console.log({base})
+    console.log({ base })
 
     if (role === "admin") {
         return [
@@ -28,6 +29,7 @@ export const getMenuItems = (role: Role) => {
             { icon: <Users size={20} />, label: "Patients", path: `${base}/patients` },
             { icon: <CalendarDays size={20} />, label: "Appointments", path: `${base}/appointments` },
             { icon: <FileText size={20} />, label: "Reports", path: `${base}/reports` },
+            { icon: <MessageCircle size={20} />, label: "Messages", path: `${base}/messages` },
             { icon: <Settings size={20} />, label: "Settings", path: `${base}/settings` },
         ];
     }
@@ -36,6 +38,7 @@ export const getMenuItems = (role: Role) => {
         { icon: <User size={20} />, label: "My Profile", path: `${base}/profile` },
         { icon: <CalendarDays size={20} />, label: "My Appointments", path: `${base}/appointments` },
         { icon: <ClipboardList size={20} />, label: "My Reports", path: `${base}/reports` },
+        { icon: <MessageCircle size={20} />, label: "Messages", path: `${base}/messages` },
         { icon: <Settings size={20} />, label: "Settings", path: `${base}/settings` },
     ];
 };

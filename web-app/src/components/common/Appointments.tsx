@@ -7,8 +7,10 @@ import {
   Stethoscope,
   FileText,
   ArrowUpDown,
+  CalendarPlus,
 } from "lucide-react";
 import { Modal, Button } from "antd";
+import { useNavigate } from "react-router-dom";
 
 type Appointment = {
   _id: string;
@@ -39,7 +41,7 @@ const dummyAppointments: Appointment[] = [
     reason: "Fever & Cold",
     status: "pending",
   },
-   {
+  {
     _id: "1c",
     patientId: { _id: "p1", fullName: "Rahul Sharma" },
     doctorId: { _id: "d1", fullName: "Dr. Mehta" },
@@ -49,7 +51,7 @@ const dummyAppointments: Appointment[] = [
     reason: "Fever & Cold",
     status: "pending",
   },
-   {
+  {
     _id: "1sfg",
     patientId: { _id: "p1", fullName: "Rahul Sharma" },
     doctorId: { _id: "d1", fullName: "Dr. Mehta" },
@@ -107,6 +109,7 @@ const getStatusStyle = (status: string) => {
 };
 
 const Appointments = () => {
+  const navigate = useNavigate()
   const { user } = useAuth();
 
   const [selected, setSelected] = useState<Appointment | null>(null);
@@ -128,8 +131,8 @@ const Appointments = () => {
         user.role === "patient"
           ? appt.patientId._id === user._id
           : user.role === "doctor"
-          ? appt.doctorId._id === user._id
-          : true;
+            ? appt.doctorId._id === user._id
+            : true;
 
       const statusMatch =
         statusFilter === "all" || appt.status === statusFilter;
@@ -161,11 +164,10 @@ const Appointments = () => {
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
-                className={`px-3 py-1.5 text-sm rounded-full border transition ${
-                  statusFilter === status
+                className={`px-3 py-1.5 text-sm rounded-full border transition ${statusFilter === status
                     ? "bg-black text-white border-black"
                     : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 {status}
               </button>
@@ -173,17 +175,20 @@ const Appointments = () => {
           )}
         </div>
 
-        <button
-          onClick={() =>
-            setSortOrder((prev) =>
-              prev === "latest" ? "earliest" : "latest"
-            )
-          }
-          className="flex items-center gap-2 px-3 py-1.5 text-sm border rounded-lg bg-white hover:bg-gray-50 w-25"
-        >
-          <ArrowUpDown size={16} />
-          {sortOrder === "latest" ? "Latest" : "Earliest"}
-        </button>
+        <div className="flex gap-2 justify-center items-center">
+          <button
+            onClick={() =>
+              setSortOrder((prev) =>
+                prev === "latest" ? "earliest" : "latest"
+              )
+            }
+            className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-white hover:bg-gray-50 w-25"
+          >
+            <ArrowUpDown size={16} />
+            {sortOrder === "latest" ? "Latest" : "Earliest"}
+          </button>
+          <button onClick={() => navigate("./book")} className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-white hover:bg-gray-50"><CalendarPlus size={16} /> Book an Appointment</button>
+        </div>
       </div>
 
       {/* Grid */}

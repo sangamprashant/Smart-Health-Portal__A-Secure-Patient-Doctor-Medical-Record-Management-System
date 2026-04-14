@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       fullName: "Prashant Srivastav",
       email: "prashant@example.com",
       password: "hashed_password",
-      role: "patient",
+      role: "doctor",
       profile_image: "",
       gender: "male",
       age: 24,

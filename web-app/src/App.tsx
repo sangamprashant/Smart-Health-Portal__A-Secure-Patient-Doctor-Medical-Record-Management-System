@@ -10,10 +10,11 @@ import About from './components/home/about';
 import SmartFeatures from './components/home/SmartFeatures';
 import Navbar from './components/Navbar';
 import ScanPage from './components/sacn';
-import { Profile } from './components/user-pages';
+import { PatientReport, Profile } from './components/user-pages';
 import { useAuth } from './providers/AuthContext';
 import { AdminUser } from './components/Admin';
-import { Appointments, Settings } from './components/common';
+import { Appointments, BookAppointments, Messages, Settings } from './components/common';
+import { DoctorPatient } from './components/doctors-pages';
 
 function App() {
   const { user } = useAuth();
@@ -25,12 +26,19 @@ function App() {
         <Routes>
           <Route path="/:role/dashboard" element={<Profile />} />
           <Route path="/:role/profile" element={<Profile />} />
+          <Route path="/:role/settings" element={<Settings />} />
+          <Route path="/:role/appointments" element={<Appointments />} />
+          <Route path='/:role/appointments/book' element={<BookAppointments />} />
+          <Route path="/:role/reports" element={<PatientReport />} />
+          <Route path='/:role/messages' element={<Messages/>} />
 
           <Route path='/admin/doctors' element={<AdminUser type="doctor" />} />
           <Route path='/admin/patients' element={<AdminUser type="patient" />} />
-          <Route path="/:role/settings" element={<Settings />} />
+          {/* doctors */}
+          <Route path="/doctor/patients" element={<DoctorPatient />} />
+          {/* patients */}
+
           {/* TODO: check patient and doctor pannel then by role   */}
-          <Route path="/:role/appointments" element={<Appointments />} />
           <Route path="*" element={<PageNotFound />} />
         </Routes>
       </Layout>
