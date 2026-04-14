@@ -6,6 +6,7 @@ import {
 import React, { useState } from "react";
 import Sidebar, { SidebarMobile } from "./Sidebar";
 import { Button } from "antd";
+import { NotificationPanel } from "../common";
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [mobileOpen, setMobileOpen] = useState(false);
@@ -60,6 +61,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                                 Dr. Admin
                             </p>
                         </div>
+                        <NotificationPanel/>
                     </div>
                 </header>
 
