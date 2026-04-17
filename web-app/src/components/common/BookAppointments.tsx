@@ -1,201 +1,192 @@
-import React, { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
+import { notification } from "antd";
+import { useNavigate } from "react-router-dom";
+import _env from "../../utils/_env";
+import { useAuth } from "../../providers/AuthContext";
 
-const WORK_START = 10; // 10 AM
-const WORK_END = 18;   // 6 PM
-const SLOT_DURATION = 15; // minutes
+type Doctor = {
+  _id: string;
+  fullName: string;
+  email: string;
+};
+
+type Slot = {
+  time: string;
+  booked: number;
+  available: boolean;
+};
 
 const BookAppointments = () => {
-  // ✅ Dummy IDs
-  const doctorId = "doc_123";
-  const patientId = "pat_456";
-
+  const navigate = useNavigate();
+  const { token, user } = useAuth();
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [doctorId, setDoctorId] = useState("");
   const [date, setDate] = useState("");
-  const [slots, setSlots] = useState<any[]>([]);
+  const [slots, setSlots] = useState<Slot[]>([]);
   const [selectedTime, setSelectedTime] = useState("");
   const [reason, setReason] = useState("");
-
-  // 🔥 Dummy DB (in-memory)
-  const [bookings, setBookings] = useState<any[]>([]);
-
-  // 🔥 Generate slots dynamically
-  const generateSlots = () => {
-    const slots = [];
-    let start = WORK_START * 60;
-    let end = WORK_END * 60;
-
-    for (let i = start; i < end; i += SLOT_DURATION) {
-      const hour = Math.floor(i / 60);
-      const min = i % 60;
-
-      const time = `${hour.toString().padStart(2, "0")}:${min
-        .toString()
-        .padStart(2, "0")}`;
-
-      slots.push(time);
-    }
-
-    return slots;
-  };
-
-  // 🔥 Simulate API: get availability
-  const fetchSlots = (selectedDate: string) => {
-    const allSlots = generateSlots();
-
-    const slotMap: any = {};
-
-    bookings
-      .filter((b) => b.date === selectedDate && b.doctorId === doctorId)
-      .forEach((b) => {
-        slotMap[b.time] = (slotMap[b.time] || 0) + 1;
-      });
-
-    const result = allSlots.map((time) => ({
-      time,
-      booked: slotMap[time] || 0,
-      available: (slotMap[time] || 0) < 2,
-    }));
-
-    setSlots(result);
-  };
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (date) fetchSlots(date);
-  }, [date, bookings]);
+    const fetchDoctors = async () => {
+      if (!token) return;
 
-  // 🔥 Dummy booking logic
-  const handleBook = () => {
-    if (!selectedTime) return;
+      try {
+        const res = await fetch(`${_env.SERVER_URL}/user/doctors`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
 
-    const alreadyBooked = bookings.find(
-      (b) =>
-        b.patientId === patientId &&
-        b.date === date &&
-        b.time === selectedTime
-    );
+        if (!res.ok) throw new Error(data.message || "Failed to load doctors");
 
-    if (alreadyBooked) {
-      alert("You already booked this slot");
-      return;
-    }
-
-    const count = bookings.filter(
-      (b) =>
-        b.doctorId === doctorId &&
-        b.date === date &&
-        b.time === selectedTime
-    ).length;
-
-    if (count >= 2) {
-      alert("Slot full");
-      return;
-    }
-
-    const newBooking = {
-      id: Date.now(),
-      doctorId,
-      patientId,
-      date,
-      time: selectedTime,
-      reason,
+        setDoctors(data);
+        if (data[0]?._id) setDoctorId(data[0]._id);
+      } catch (err) {
+        notification.error({
+          message: err instanceof Error ? err.message : "Failed to load doctors",
+        });
+      }
     };
 
-    setBookings([...bookings, newBooking]);
-    alert("Appointment booked (dummy)");
+    fetchDoctors();
+  }, [token]);
 
-    setSelectedTime("");
-    setReason("");
+  useEffect(() => {
+    const fetchSlots = async () => {
+      if (!token || !doctorId || !date) {
+        setSlots([]);
+        return;
+      }
+
+      try {
+        const params = new URLSearchParams({ doctorId, date });
+        const res = await fetch(`${_env.SERVER_URL}/appointments/slots?${params}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.message || "Failed to load slots");
+
+        setSlots(data);
+      } catch (err) {
+        notification.error({
+          message: err instanceof Error ? err.message : "Failed to load slots",
+        });
+      }
+    };
+
+    fetchSlots();
+  }, [date, doctorId, token]);
+
+  const handleBook = async () => {
+    if (!token || !user) return;
+    if (!doctorId || !date || !selectedTime || !reason.trim()) {
+      return notification.error({ message: "Select doctor, date, slot and reason" });
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${_env.SERVER_URL}/appointments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ doctorId, date, time: selectedTime, reason }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message || "Booking failed");
+
+      notification.success({ message: "Appointment booked successfully" });
+      navigate(`/${user.role}/appointments`);
+    } catch (err) {
+      notification.error({
+        message: err instanceof Error ? err.message : "Booking failed",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="p-6">
-      {/* Date */}
-      <div className="flex justify-end">
-        <input
-          type="date"
-          className="border rounded border-gray-300 p-2 py-1 w-36"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
+      <div className="mb-6">
+        <h2 className="text-xl font-bold">Book Appointment</h2>
+        <p className="text-sm text-gray-500">Choose a doctor, date, and available slot.</p>
       </div>
 
-      <h2 className="text-xl font-bold mb-4">Book Appointment</h2>
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="flex flex-col gap-2 text-sm font-medium">
+          Doctor
+          <select
+            className="rounded border border-gray-300 p-2"
+            value={doctorId}
+            onChange={(e) => {
+              setDoctorId(e.target.value);
+              setSelectedTime("");
+            }}
+          >
+            {doctors.map((doctor) => (
+              <option key={doctor._id} value={doctor._id}>
+                {doctor.fullName}
+              </option>
+            ))}
+          </select>
+        </label>
 
-      {/* 🔥 Placeholder */}
-      {!date && (
-        <div className="mt-6 space-y-4 grid grid-cols-3 gap-6">
-          {[...Array(WORK_END - WORK_START)].map((_, idx) => {
-            const hour = WORK_START + idx;
+        <label className="flex flex-col gap-2 text-sm font-medium">
+          Date
+          <input
+            type="date"
+            className="rounded border border-gray-300 p-2"
+            min={new Date().toISOString().split("T")[0]}
+            value={date}
+            onChange={(e) => {
+              setDate(e.target.value);
+              setSelectedTime("");
+            }}
+          />
+        </label>
+      </div>
 
-            return (
-              <div key={hour}>
-                <p className="text-sm text-gray-500 mb-2">
-                  {hour}:00 - {hour + 1}:00
-                </p>
-
-                <div className="grid grid-cols-4 gap-2">
-                  {[0, 15, 30, 45].map((min) => {
-                    const time = `${hour
-                      .toString()
-                      .padStart(2, "0")}:${min
-                      .toString()
-                      .padStart(2, "0")}`;
-
-                    return (
-                      <div
-                        key={time}
-                        className="p-2 text-center border rounded bg-gray-100 text-gray-400"
-                      >
-                        {time}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* 🔥 Real Slots */}
-      {slots.length > 0 && (
-        <div className="grid grid-cols-3 gap-3 mt-4">
+      {date && (
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
           {slots.map((slot) => (
             <button
               key={slot.time}
               disabled={!slot.available}
               onClick={() => setSelectedTime(slot.time)}
-              className={`p-2 border rounded text-sm ${
+              className={`rounded border p-3 text-sm ${
                 selectedTime === slot.time
-                  ? "bg-blue-500 text-white"
+                  ? "bg-blue-600 text-white"
                   : slot.available
-                  ? "bg-green-100"
-                  : "bg-gray-300 cursor-not-allowed"
+                    ? "bg-green-50 text-green-700"
+                    : "cursor-not-allowed bg-gray-200 text-gray-500"
               }`}
             >
               {slot.time}
-              <div className="text-xs">
-                {slot.booked}/2 booked
-              </div>
+              <span className="block text-xs">{slot.booked}/2 booked</span>
             </button>
           ))}
         </div>
       )}
 
-      {/* Reason */}
       <textarea
-        placeholder="Reason"
-        className="border p-2 w-full mt-4"
+        placeholder="Reason for visit"
+        className="mt-6 w-full rounded border border-gray-300 p-3"
+        rows={4}
         value={reason}
         onChange={(e) => setReason(e.target.value)}
       />
 
-      {/* Button */}
       <button
         onClick={handleBook}
-        className="bg-blue-600 text-white px-4 py-2 rounded mt-3"
-        disabled={!selectedTime}
+        className="mt-3 rounded bg-blue-600 px-5 py-2 text-white disabled:opacity-60"
+        disabled={loading || !selectedTime}
       >
-        Book Appointment
+        {loading ? "Booking..." : "Book Appointment"}
       </button>
     </div>
   );

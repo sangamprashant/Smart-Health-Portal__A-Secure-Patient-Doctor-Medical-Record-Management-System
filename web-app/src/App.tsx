@@ -15,6 +15,7 @@ import { useAuth } from './providers/AuthContext';
 import { AdminUser } from './components/Admin';
 import { Appointments, BookAppointments, Messages, Settings } from './components/common';
 import { DoctorPatient } from './components/doctors-pages';
+import EmergencyPatientPage from './components/EmergencyPatientPage';
 
 function App() {
   const { user } = useAuth();
@@ -31,6 +32,7 @@ function App() {
           <Route path='/:role/appointments/book' element={<BookAppointments />} />
           <Route path="/:role/reports" element={<PatientReport />} />
           <Route path='/:role/messages' element={<Messages/>} />
+          <Route path="/emergency/:qrCodeId" element={<EmergencyPatientPage />} />
 
           <Route path='/admin/doctors' element={<AdminUser type="doctor" />} />
           <Route path='/admin/patients' element={<AdminUser type="patient" />} />
@@ -54,6 +56,7 @@ function App() {
         <Route path="/services" element={<SmartFeatures />} />
         <Route path="/contact" element={<ContactSection />} />
         <Route path="/scan" element={<ScanPage />} />
+        <Route path="/emergency/:qrCodeId" element={<EmergencyPatientPage />} />
 
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

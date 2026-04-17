@@ -2,14 +2,38 @@ import { useEffect, useRef, useState } from "react";
 import { ScanLine, Camera, SwitchCamera } from "lucide-react";
 import { Html5Qrcode } from "html5-qrcode";
 import Scroll from "./page-binder/Scroll";
+import { useNavigate } from "react-router-dom";
 
 const ScanPage = () => {
+  const navigate = useNavigate();
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [cameraId, setCameraId] = useState<string | null>(null);
   const [devices, setDevices] = useState<any[]>([]);
   const [scannedText, setScannedText] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [isFrontCamera, setIsFrontCamera] = useState(false);
+
+  const openEmergencyProfile = (text: string) => {
+    const cleanText = text.trim();
+
+    setScannedText(cleanText);
+    setIsScanning(false);
+    scannerRef.current?.stop().catch(() => { });
+
+    try {
+      const url = new URL(cleanText);
+      const emergencyMatch = url.pathname.match(/\/emergency\/([^/]+)/);
+
+      if (emergencyMatch?.[1]) {
+        navigate(`/emergency/${emergencyMatch[1]}`);
+        return;
+      }
+    } catch {
+      // Plain QR ids are valid for printed emergency cards.
+    }
+
+    navigate(`/emergency/${encodeURIComponent(cleanText)}`);
+  };
 
   useEffect(() => {
     Html5Qrcode.getCameras().then((cams) => {
@@ -45,9 +69,7 @@ const ScanPage = () => {
       cameraId,
       { fps: 10, qrbox: 260 },
       (text) => {
-        setScannedText(text);
-        setIsScanning(false);
-        scannerRef.current?.stop();
+        openEmergencyProfile(text);
       },
       () => { }
     );
@@ -74,9 +96,7 @@ const ScanPage = () => {
       nextCamera.id,
       { fps: 10, qrbox: 260 },
       (text) => {
-        setScannedText(text);
-        setIsScanning(false);
-        scannerRef.current?.stop();
+        openEmergencyProfile(text);
       },
       () => { }
     );

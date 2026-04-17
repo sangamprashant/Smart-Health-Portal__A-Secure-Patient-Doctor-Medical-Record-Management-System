@@ -5,6 +5,12 @@ import userRoutes from "./routes/user.routes";
 import adminRoutes from "./routes/admin.routes";
 import settingsRoutes from "./routes/settings.routes";
 import healthRoutes from "./routes/health.routes";
+import emergencyRoutes from "./routes/emergency.routes";
+import appointmentRoutes from "./routes/appointment.routes";
+import notificationRoutes from "./routes/notification.routes";
+import chatRoutes from "./routes/chat.routes";
+import contactRoutes from "./routes/contact.routes";
+import recordRoutes from "./routes/record.routes";
 
 const app = express();
 
@@ -42,5 +48,11 @@ app.use("/api/user", userRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/health", healthRoutes);
+app.use("/api/emergency", emergencyRoutes);
+app.use("/api/appointments", appointmentRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/chat", chatRoutes);
+app.use("/api/contact", contactRoutes);
+app.use("/api/records", recordRoutes);
 
 export default app;

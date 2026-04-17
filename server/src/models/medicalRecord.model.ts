@@ -108,9 +108,8 @@ const medicalRecordSchema: Schema<IMedicalRecord> = new Schema(
   { timestamps: true }
 );
 
-const MedicalRecord = mongoose.model<IMedicalRecord>(
-  "MedicalRecord",
-  medicalRecordSchema
-);
+const MedicalRecord =
+  mongoose.models.MedicalRecord ||
+  mongoose.model<IMedicalRecord>("MedicalRecord", medicalRecordSchema);
 
 export default MedicalRecord;

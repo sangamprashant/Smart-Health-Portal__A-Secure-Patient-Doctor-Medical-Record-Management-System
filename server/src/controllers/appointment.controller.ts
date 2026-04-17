@@ -1,18 +1,25 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import Appointment from "../models/appointment.model";
 import { createNotification } from "./notification.controller";
+import User from "../models/user.model";
 
 const getSlotKey = (date: string, time: string) => {
   return `${date}_${time}`;
 };
 
 // 🔥 Book Appointment
-export const createAppointment = async (req: Request, res: Response) => {
+export const createAppointment = async (req: any, res: Response) => {
   try {
-    const { patientId, doctorId, date, time, reason } = req.body;
+    const { doctorId, date, time, reason } = req.body;
+    const patientId = req.user.role === "patient" ? req.user.id : req.body.patientId;
 
     if (!patientId || !doctorId || !date || !time) {
       return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const doctor = await User.findById(doctorId).select("role");
+    if (!doctor || doctor.role !== "doctor") {
+      return res.status(400).json({ message: "Select a valid doctor" });
     }
 
     const slotKey = `${date}_${time}`;
@@ -63,32 +70,58 @@ export const createAppointment = async (req: Request, res: Response) => {
   }
 };
 
-export const getAppointments = async (req: Request, res: Response) => {
-  try {
-    const { userId } = req.params;
+import { RequestHandler } from "express";
 
-    const appointments = await Appointment.find({
-      $or: [{ patientId: userId }, { doctorId: userId }],
-    })
+export const getAppointments: RequestHandler = async (req, res) => {
+  try {
+    const user = (req as any).user;
+
+    const filter =
+      user.role === "admin"
+        ? {}
+        : { $or: [{ patientId: user.id }, { doctorId: user.id }] };
+
+    const appointments = await Appointment.find(filter)
       .populate("patientId", "fullName email")
       .populate("doctorId", "fullName email");
 
     res.json(appointments);
-  } catch (error) {
+
+  } catch {
     res.status(500).json({ message: "Server Error" });
   }
 };
 
-export const updateAppointmentStatus = async (req: Request, res: Response) => {
+export const updateAppointmentStatus = async (req: any, res: Response) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
 
-    const appointment = await Appointment.findByIdAndUpdate(
-      id,
-      { status },
-      { new: true },
-    );
+    if (!["pending", "confirmed", "completed", "cancelled"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    const appointment = await Appointment.findById(id);
+
+    if (!appointment) {
+      return res.status(404).json({ message: "Appointment not found" });
+    }
+
+    const isDoctor = appointment.doctorId.toString() === req.user.id;
+    const isPatient = appointment.patientId.toString() === req.user.id;
+
+    if (req.user.role !== "admin" && !isDoctor && !isPatient) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    if (req.user.role === "patient" && status !== "cancelled") {
+      return res
+        .status(403)
+        .json({ message: "Patients can only cancel appointments" });
+    }
+
+    appointment.status = status;
+    await appointment.save();
 
     res.json(appointment);
   } catch (error) {
@@ -113,8 +146,12 @@ export const generateSlots = () => {
   return slots;
 };
 
-export const getSlotAvailability = async (req: Request, res: Response) => {
+export const getSlotAvailability = async (req: any, res: Response) => {
   const { doctorId, date } = req.query;
+
+  if (!doctorId || !date) {
+    return res.status(400).json({ message: "Doctor and date are required" });
+  }
 
   const slots = generateSlots();
 

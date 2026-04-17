@@ -1,15 +1,12 @@
 import express from "express";
-import {
-  getNotifications,
-  markAsRead,
-} from "../controllers/notification.controller";
+import { createRecord, getRecords } from "../controllers/record.controller";
 import { protect } from "../middleware/auth.middleware";
 
 const router = express.Router();
 
 router.use(protect);
 
-router.get("/", getNotifications);
-router.put("/:id/read", markAsRead);
+router.get("/", getRecords);
+router.post("/", createRecord);
 
 export default router;

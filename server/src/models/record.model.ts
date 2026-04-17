@@ -42,7 +42,7 @@ const recordSchema: Schema<IMedicalRecord> = new Schema(
 );
 
 const MedicalRecord = mongoose.model<IMedicalRecord>(
-  "MedicalRecord",
+  "MedicalRecordFile",
   recordSchema,
 );
 

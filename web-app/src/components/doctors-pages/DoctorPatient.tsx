@@ -1,39 +1,53 @@
-
-// ================= DOCTOR PATIENT LIST =================
-import { Input, List, Avatar, Card } from "antd";
+﻿import { useEffect, useState } from "react";
+import { Input, List, Avatar, Card, notification } from "antd";
 import { Search } from "lucide-react";
-import { useState } from "react";
+import _env from "../../utils/_env";
+import { useAuth } from "../../providers/AuthContext";
 
- const DoctorPatient: React.FC = () => {
+type Patient = {
+  _id: string;
+  fullName: string;
+  age?: number;
+  gender?: string;
+  patientId?: string;
+  profile_image?: string;
+};
+
+const DoctorPatient = () => {
+  const { token } = useAuth();
   const [search, setSearch] = useState("");
+  const [patients, setPatients] = useState<Patient[]>([]);
 
-  const patients = [
-    {
-      id: "1",
-      fullName: "Rahul Verma",
-      age: 28,
-      gender: "male",
-      patientId: "SHP-2026-123",
-      profile_image: "https://i.pravatar.cc/100?img=1",
-    },
-    {
-      id: "2",
-      fullName: "Anjali Singh",
-      age: 32,
-      gender: "female",
-      patientId: "SHP-2026-456",
-      profile_image: "https://i.pravatar.cc/100?img=2",
-    },
-  ];
+  useEffect(() => {
+    const fetchPatients = async () => {
+      if (!token) return;
 
-  const filtered = patients.filter((p) =>
-    p.fullName.toLowerCase().includes(search.toLowerCase())
+      try {
+        const res = await fetch(`${_env.SERVER_URL}/user/patients`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.message || "Failed to load patients");
+
+        setPatients(data);
+      } catch (err) {
+        notification.error({
+          message: err instanceof Error ? err.message : "Failed to load patients",
+        });
+      }
+    };
+
+    fetchPatients();
+  }, [token]);
+
+  const filtered = patients.filter((patient) =>
+    patient.fullName.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
     <div style={{ padding: 24 }}>
-      <Card style={{ borderRadius: 16 }}>
-        {/* Search */}
+      <Card style={{ borderRadius: 8 }}>
         <Input
           placeholder="Search patients..."
           prefix={<Search size={16} />}
@@ -42,16 +56,16 @@ import { useState } from "react";
           style={{ marginBottom: 20 }}
         />
 
-        {/* List */}
         <List
           itemLayout="horizontal"
           dataSource={filtered}
+          locale={{ emptyText: "No patients found" }}
           renderItem={(item) => (
             <List.Item>
               <List.Item.Meta
-                avatar={<Avatar src={item.profile_image} size={48} />}
+                avatar={<Avatar src={item.profile_image} size={48}>{item.fullName[0]}</Avatar>}
                 title={<span style={{ fontWeight: 600 }}>{item.fullName}</span>}
-                description={`ID: ${item.patientId} • ${item.age} yrs • ${item.gender}`}
+                description={`ID: ${item.patientId || "N.A"} | ${item.age || "N.A"} yrs | ${item.gender || "N.A"}`}
               />
             </List.Item>
           )}

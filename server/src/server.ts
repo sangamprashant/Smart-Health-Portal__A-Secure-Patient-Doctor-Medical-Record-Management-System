@@ -1,8 +1,11 @@
 import dotenv from "dotenv";
 dotenv.config();
 
+import http from "http";
+import os from "os";
 import app from "./app";
 import connectDB from "./config/db";
+import { initSocket } from "./socket";
 
 // import https from "https";
 // import fs from "fs";
@@ -15,6 +18,18 @@ import connectDB from "./config/db";
 
 const PORT: number = Number(process.env.PORT) || 5000;
 const HOST = "0.0.0.0";
+
+const getLocalIP = () => {
+  const nets = os.networkInterfaces();
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name] || []) {
+      if (net.family === "IPv4" && !net.internal) {
+        return net.address;
+      }
+    }
+  }
+  return "localhost";
+};
 
 const startServer = async () => {
   try {
@@ -48,8 +63,12 @@ const startServer = async () => {
     //   });
     // }
 
-    app.listen(PORT, HOST, () => {
+    const httpServer = http.createServer(app);
+    initSocket(httpServer);
+
+    httpServer.listen(PORT, HOST, () => {
       console.log(`HTTP Server running at: http://localhost:${PORT}`);
+      console.log(`Network Server running at: http://${getLocalIP()}:${PORT}`);
     });
   } catch (error) {
     console.error("Server Failed to Start:", error);

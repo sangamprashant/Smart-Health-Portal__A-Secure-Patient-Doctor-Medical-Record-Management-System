@@ -1,5 +1,6 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import Notification from "../models/notification.model";
+import { emitToUser } from "../socket";
 
 export const createNotification = async (
   userId: string,
@@ -7,17 +8,19 @@ export const createNotification = async (
   message: string,
   type: string = "system",
 ) => {
-  await Notification.create({
+  const notification = await Notification.create({
     userId,
     title,
     message,
     type,
   });
+
+  emitToUser(userId, "notification:new", notification);
 };
 
-export const getNotifications = async (req: Request, res: Response) => {
+export const getNotifications = async (req: any, res: Response) => {
   try {
-    const { userId } = req.params;
+    const userId = req.user.id;
 
     const notifications = await Notification.find({ userId }).sort({
       createdAt: -1,
@@ -29,12 +32,12 @@ export const getNotifications = async (req: Request, res: Response) => {
   }
 };
 
-export const markAsRead = async (req: Request, res: Response) => {
+export const markAsRead = async (req: any, res: Response) => {
   try {
     const { id } = req.params;
 
-    const notification = await Notification.findByIdAndUpdate(
-      id,
+    const notification = await Notification.findOneAndUpdate(
+      { _id: id, userId: req.user.id },
       { isRead: true },
       { new: true },
     );

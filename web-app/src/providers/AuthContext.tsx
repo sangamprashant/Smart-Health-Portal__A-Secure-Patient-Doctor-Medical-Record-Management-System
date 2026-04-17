@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-// import _env from "../utils/_env";
+import _env from "../utils/_env";
 
 type User = {
   _id: string;
@@ -19,7 +19,7 @@ type User = {
   };
   patientId?: string;
   notifications: boolean;
-}
+};
 
 type AuthContextType = {
   user: User | null;
@@ -35,73 +35,52 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
-  // useEffect(() => {
-  //   const initAuth = async () => {
-  //     const storedToken = sessionStorage.getItem("token");
+  const logout = () => {
+    setToken(null);
+    setUser(null);
 
-  //     if (!storedToken) {
-  //       logout();
-  //       return;
-  //     }
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
+  };
 
-  //     try {
-  //       const res = await fetch(`${_env.SERVER_URL}/user/me`, {
-  //         headers: {
-  //           Authorization: `Bearer ${storedToken}`,
-  //         },
-  //       });
+  useEffect(() => {
+    const initAuth = async () => {
+      const storedToken = sessionStorage.getItem("token");
+      const storedUser = sessionStorage.getItem("user");
 
-  //       if (!res.ok) {
-  //         throw new Error("Invalid token");
-  //       }
+      if (!storedToken) {
+        logout();
+        return;
+      }
 
-  //       const data = await res.json();
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+        setToken(storedToken);
+      }
 
-  //       setToken(storedToken);
-  //       setUser(data);
+      try {
+        const res = await fetch(`${_env.SERVER_URL}/user/me`, {
+          headers: {
+            Authorization: `Bearer ${storedToken}`,
+          },
+        });
 
-  //       sessionStorage.setItem("user", JSON.stringify(data));
+        if (!res.ok) {
+          throw new Error("Invalid token");
+        }
 
-  //     } catch (_:unknown) {
-  //       console.log("Auto logout: invalid session");
-  //       logout();
-  //     }
-  //   };
+        const data = await res.json();
 
-  //   initAuth();
-  // }, []);
-
-    useEffect(() => {
-    // 🔥 DUMMY DATA (replace later when backend is ready)
-    const dummyUser: User = {
-      _id: "p1",
-      fullName: "Prashant Srivastav",
-      email: "prashant@example.com",
-      password: "hashed_password",
-      role: "doctor",
-      profile_image: "",
-      gender: "male",
-      age: 24,
-      phone: "9876543210",
-      address: {
-        city: "Noida",
-        state: "Uttar Pradesh",
-        country: "India",
-      },
-      patientId: "PAT001",
-      notifications: true,
+        setToken(storedToken);
+        setUser(data);
+        sessionStorage.setItem("user", JSON.stringify(data));
+      } catch {
+        logout();
+      }
     };
 
-    const dummyToken = "dummy-jwt-token";
-
-    // Simulate login
-    setUser(dummyUser);
-    setToken(dummyToken);
-
-    sessionStorage.setItem("token", dummyToken);
-    sessionStorage.setItem("user", JSON.stringify(dummyUser));
+    initAuth();
   }, []);
-
 
   const login = (token: string, user: User) => {
     setToken(token);
@@ -114,14 +93,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const updateUserData = (user: User) => {
     setUser(user);
     sessionStorage.setItem("user", JSON.stringify(user));
-  };
-
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("user");
   };
 
   return (

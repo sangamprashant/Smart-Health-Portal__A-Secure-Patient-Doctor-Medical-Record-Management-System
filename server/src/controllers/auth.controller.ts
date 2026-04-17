@@ -3,8 +3,10 @@ import User from "../models/user.model";
 import jwt from "jsonwebtoken";
 import { createNotification } from "./notification.controller";
 
+const JWT_SECRET = process.env.JWT_SECRET || "SECRET_KEY";
+
 const generateToken = (id: string, role: string) => {
-  return jwt.sign({ id, role }, "SECRET_KEY", {
+  return jwt.sign({ id, role }, JWT_SECRET, {
     expiresIn: "7d",
   });
 };

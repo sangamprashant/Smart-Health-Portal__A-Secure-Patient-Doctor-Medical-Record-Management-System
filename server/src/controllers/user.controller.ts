@@ -52,3 +52,31 @@ export const getMe = async (req: any, res: Response) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
+
+export const getDoctors = async (_req: any, res: Response) => {
+  try {
+    const doctors = await User.find({ role: "doctor" })
+      .select("-password")
+      .sort({ fullName: 1 });
+
+    res.json(doctors);
+  } catch {
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+export const getPatients = async (req: any, res: Response) => {
+  try {
+    if (!["doctor", "admin"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const patients = await User.find({ role: "patient" })
+      .select("-password")
+      .sort({ fullName: 1 });
+
+    res.json(patients);
+  } catch {
+    res.status(500).json({ message: "Server Error" });
+  }
+};
