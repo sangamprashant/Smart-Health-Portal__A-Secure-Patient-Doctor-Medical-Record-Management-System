@@ -10,10 +10,12 @@ import {
 } from "antd";
 import _env from "../../utils/_env";
 import { useAuth } from "../../providers/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 
 const AdminUser = ({ type }: { type: "doctor" | "patient" }) => {
     const { token } = useAuth();
+    const navigate = useNavigate();
 
     const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -61,7 +63,7 @@ const AdminUser = ({ type }: { type: "doctor" | "patient" }) => {
 
     const handleAdd = () => {
         setEditingUser(null);
-        setForm({ fullName: "", email: "", password: "", role: "patient" });
+        setForm({ fullName: "", email: "", password: "", role: type });
         setOpenModal(true);
     };
 
@@ -177,6 +179,7 @@ const AdminUser = ({ type }: { type: "doctor" | "patient" }) => {
             title: "Action",
             render: (_: any, record: any) => (
                 <div className="flex gap-2">
+                    <Button onClick={() => navigate(`/admin/profiles/${record._id}`)}>View</Button>
                     <Button onClick={() => handleEdit(record)}>Edit</Button>
 
                     <Popconfirm

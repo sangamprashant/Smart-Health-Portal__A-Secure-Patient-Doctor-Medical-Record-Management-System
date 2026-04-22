@@ -3,6 +3,8 @@ import crypto from "crypto";
 import EmergencyAccess from "../models/emergency.model";
 import HealthRecord from "../models/healthRecord.model";
 import MedicalRecord from "../models/medicalRecord.model";
+import Record from "../models/record.model";
+import Appointment from "../models/appointment.model";
 import User from "../models/user.model";
 
 const publicPatientFields =
@@ -45,6 +47,21 @@ const buildEmergencyPayload = async (qrCodeId: string, viewerRole?: string) => {
         .lean()
     : null;
 
+  const uploadedRecords = canViewClinicalDetails
+    ? await Record.find({ patientId: patient._id })
+        .populate("doctorId", "fullName email")
+        .populate("issuedByDoctorId", "fullName email")
+        .sort({ issuedDate: -1, createdAt: -1 })
+        .lean()
+    : [];
+
+  const appointments = canViewClinicalDetails
+    ? await Appointment.find({ patientId: patient._id })
+        .populate("doctorId", "fullName email")
+        .sort({ date: -1, createdAt: -1 })
+        .lean()
+    : [];
+
   const emergencySummary = {
     bloodGroup: medicalRecord?.bloodGroup || "N.A",
     allergies: medicalRecord?.allergies || [],
@@ -59,12 +76,15 @@ const buildEmergencyPayload = async (qrCodeId: string, viewerRole?: string) => {
     patient,
     emergency: emergencySummary,
     clinical: canViewClinicalDetails
-      ? {
+        ? {
           healthRecord,
+          fullMedicalRecord: medicalRecord,
           medications: medicalRecord?.medications || [],
           dietPlan: medicalRecord?.dietPlan || null,
           doctorNotes: medicalRecord?.doctorNotes || "",
           reports: medicalRecord?.reports || [],
+          uploadedRecords,
+          appointments,
           lastUpdated: medicalRecord?.updatedAt || null,
         }
       : null,

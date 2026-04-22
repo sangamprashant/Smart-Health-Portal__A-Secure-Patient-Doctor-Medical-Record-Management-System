@@ -1,24 +1,31 @@
-import { useEffect, useRef, useState } from "react";
-import { ScanLine, Camera, SwitchCamera } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ScanLine, Camera, SwitchCamera, AlertTriangle } from "lucide-react";
 import { Html5Qrcode } from "html5-qrcode";
 import Scroll from "./page-binder/Scroll";
 import { useNavigate } from "react-router-dom";
+
+type CameraDevice = {
+  id: string;
+  label: string;
+};
 
 const ScanPage = () => {
   const navigate = useNavigate();
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [cameraId, setCameraId] = useState<string | null>(null);
-  const [devices, setDevices] = useState<any[]>([]);
+  const [devices, setDevices] = useState<CameraDevice[]>([]);
   const [scannedText, setScannedText] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [isFrontCamera, setIsFrontCamera] = useState(false);
+  const [error, setError] = useState("");
+  const [loadingCameras, setLoadingCameras] = useState(true);
 
-  const openEmergencyProfile = (text: string) => {
+  const openEmergencyProfile = useCallback((text: string) => {
     const cleanText = text.trim();
 
     setScannedText(cleanText);
     setIsScanning(false);
-    scannerRef.current?.stop().catch(() => { });
+    void scannerRef.current?.stop().catch(() => {});
 
     try {
       const url = new URL(cleanText);
@@ -29,112 +36,139 @@ const ScanPage = () => {
         return;
       }
     } catch {
-      // Plain QR ids are valid for printed emergency cards.
+      // Plain QR values are also accepted.
     }
 
     navigate(`/emergency/${encodeURIComponent(cleanText)}`);
-  };
+  }, [navigate]);
 
-  useEffect(() => {
-    Html5Qrcode.getCameras().then((cams) => {
-      if (cams.length) {
-        setDevices(cams);
-        setCameraId(cams[0].id);
-      }
-    });
-
-    return () => {
-      scannerRef.current?.stop().catch(() => { });
-    };
-  }, []);
-
-  const startScanner = async () => {
-    if (!cameraId) return;
-
-
-    const selectedCamera = devices.find(d => d.id === cameraId);
-    const isFront =
-      selectedCamera?.label?.toLowerCase().includes("front") ||
-      selectedCamera?.label?.toLowerCase().includes("user");
-
-    setIsFrontCamera(isFront);
-
-    if (!scannerRef.current) {
-      scannerRef.current = new Html5Qrcode("reader");
+  const startScanner = useCallback(async (selectedCameraId?: string) => {
+    const nextCameraId = selectedCameraId || cameraId;
+    if (!nextCameraId) {
+      setError("No camera found on this device.");
+      return;
     }
 
-    setIsScanning(true);
+    try {
+      setError("");
 
-    await scannerRef.current.start(
-      cameraId,
-      { fps: 10, qrbox: 260 },
-      (text) => {
-        openEmergencyProfile(text);
-      },
-      () => { }
-    );
+      const selectedCamera = devices.find((device) => device.id === nextCameraId);
+      const isFront =
+        selectedCamera?.label?.toLowerCase().includes("front") ||
+        selectedCamera?.label?.toLowerCase().includes("user");
 
-  };
+      setIsFrontCamera(!!isFront);
+
+      if (!scannerRef.current) {
+        scannerRef.current = new Html5Qrcode("reader");
+      }
+
+      const currentState = scannerRef.current.getState();
+      if (currentState === 2) {
+        await scannerRef.current.stop();
+      }
+
+      setIsScanning(true);
+
+      await scannerRef.current.start(
+        nextCameraId,
+        { fps: 10, qrbox: 260, aspectRatio: 1 },
+        (text) => {
+          openEmergencyProfile(text);
+        },
+        () => {},
+      );
+    } catch (err) {
+      setIsScanning(false);
+      setError(err instanceof Error ? err.message : "Unable to access camera.");
+    }
+  }, [cameraId, devices, openEmergencyProfile]);
 
   const switchCamera = async () => {
-    if (devices.length < 2 || !scannerRef.current) return;
+    if (devices.length < 2 || !cameraId) return;
 
-    const currentIndex = devices.findIndex(d => d.id === cameraId);
+    const currentIndex = devices.findIndex((device) => device.id === cameraId);
     const nextIndex = (currentIndex + 1) % devices.length;
     const nextCamera = devices[nextIndex];
 
-    const isFront =
-      nextCamera.label?.toLowerCase().includes("front") ||
-      nextCamera.label?.toLowerCase().includes("user");
-
-    setIsFrontCamera(isFront);
     setCameraId(nextCamera.id);
-
-    await scannerRef.current.stop();
-
-    await scannerRef.current.start(
-      nextCamera.id,
-      { fps: 10, qrbox: 260 },
-      (text) => {
-        openEmergencyProfile(text);
-      },
-      () => { }
-    );
-
+    await startScanner(nextCamera.id);
   };
+
+  useEffect(() => {
+    const initCameras = async () => {
+      try {
+        setLoadingCameras(true);
+        setError("");
+
+        const cams = await Html5Qrcode.getCameras();
+        if (!cams.length) {
+          setError("No camera available for QR scanning.");
+          return;
+        }
+
+        setDevices(cams);
+        setCameraId(cams[0].id);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Unable to load cameras.");
+      } finally {
+        setLoadingCameras(false);
+      }
+    };
+
+    void initCameras();
+
+    return () => {
+      void scannerRef.current?.stop().catch(() => {});
+      scannerRef.current?.clear();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!loadingCameras && cameraId && !isScanning) {
+      void startScanner(cameraId);
+    }
+  }, [cameraId, isScanning, loadingCameras, startScanner]);
 
   return (
     <Scroll>
       <div className="py-12 bg-slate-50 flex flex-col items-center justify-center px-4">
-
-        {!isScanning && (
-          <div className="text-center mb-6">
-            <ScanLine size={70} className="text-blue-900 mx-auto mb-3" />
-            <h2 className="text-2xl font-bold text-gray-900">
-              Emergency QR / Document Scanner
-            </h2>
-            <p className="text-gray-600 mt-2">
-              Scan QR code or document using front or back camera
-            </p>
-          </div>
-        )}
+        <div className="text-center mb-6">
+          <ScanLine size={70} className="text-blue-900 mx-auto mb-3" />
+          <h2 className="text-2xl font-bold text-gray-900">
+            Emergency QR Scanner
+          </h2>
+          <p className="text-gray-600 mt-2">
+            Open the camera, scan the QR, and go directly to the patient emergency profile.
+          </p>
+        </div>
 
         <div
           id="reader"
-          className={`w-full max-w-sm rounded-xl overflow-hidden border bg-black ${isFrontCamera ? "scale-x-[-1]" : ""}`}
+          className={`w-full max-w-sm rounded-xl overflow-hidden border bg-black min-h-[320px] ${isFrontCamera ? "scale-x-[-1]" : ""}`}
         />
+
+        {error && (
+          <div className="mt-5 w-full max-w-sm rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <div className="flex items-start gap-2">
+              <AlertTriangle size={18} className="mt-0.5" />
+              <span>{error}</span>
+            </div>
+          </div>
+        )}
 
         <div className="flex gap-4 mt-5">
           {!isScanning && (
             <button
-              onClick={startScanner}
+              onClick={() => void startScanner()}
               className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-lg"
             >
               <Camera size={18} /> Start Camera
-            </button>)}
+            </button>
+          )}
           {devices.length > 1 && (
             <button
-              onClick={switchCamera}
+              onClick={() => void switchCamera()}
               className="flex items-center gap-2 bg-gray-800 text-white px-5 py-2 rounded-lg"
             >
               <SwitchCamera size={18} /> Switch

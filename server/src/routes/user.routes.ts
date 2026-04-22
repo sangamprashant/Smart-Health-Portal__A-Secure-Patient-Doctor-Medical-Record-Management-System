@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  getAccessibleProfile,
   getDoctors,
   getMe,
   getPatients,
@@ -13,5 +14,6 @@ router.put("/profile", protect, updateProfile);
 router.get("/me", protect, getMe);
 router.get("/doctors", protect, getDoctors);
 router.get("/patients", protect, getPatients);
+router.get("/profiles/:id", protect, getAccessibleProfile);
 
 export default router;

@@ -1,8 +1,10 @@
 ﻿import { useEffect, useState } from "react";
-import { Input, List, Avatar, Card, notification } from "antd";
+import { Input, List, Avatar, Card, Button, notification } from "antd";
 import { Search } from "lucide-react";
 import _env from "../../utils/_env";
 import { useAuth } from "../../providers/AuthContext";
+import { getUserImage } from "../../hooks/image";
+import { useNavigate } from "react-router-dom";
 
 type Patient = {
   _id: string;
@@ -15,6 +17,7 @@ type Patient = {
 
 const DoctorPatient = () => {
   const { token } = useAuth();
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [patients, setPatients] = useState<Patient[]>([]);
 
@@ -61,9 +64,15 @@ const DoctorPatient = () => {
           dataSource={filtered}
           locale={{ emptyText: "No patients found" }}
           renderItem={(item) => (
-            <List.Item>
+            <List.Item
+              actions={[
+                <Button key="view" type="link" onClick={() => navigate(`/doctor/profiles/${item._id}`)}>
+                  Open Profile
+                </Button>,
+              ]}
+            >
               <List.Item.Meta
-                avatar={<Avatar src={item.profile_image} size={48}>{item.fullName[0]}</Avatar>}
+                avatar={<Avatar src={getUserImage(item.profile_image)} size={48}>{item.fullName[0]}</Avatar>}
                 title={<span style={{ fontWeight: 600 }}>{item.fullName}</span>}
                 description={`ID: ${item.patientId || "N.A"} | ${item.age || "N.A"} yrs | ${item.gender || "N.A"}`}
               />

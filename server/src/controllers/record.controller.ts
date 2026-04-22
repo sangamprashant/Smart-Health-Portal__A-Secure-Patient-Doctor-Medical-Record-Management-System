@@ -2,6 +2,37 @@ import { Response } from "express";
 import Record from "../models/record.model";
 import { createNotification } from "./notification.controller";
 
+const normalizeAttachmentUrls = (value: unknown): string[] => {
+  if (!value) return [];
+
+  if (Array.isArray(value)) {
+    return value
+      .flatMap((item) =>
+        String(item)
+          .split(/\r?\n/)
+          .map((entry) => entry.trim()),
+      )
+      .filter(Boolean);
+  }
+
+  const raw = String(value).trim();
+  if (!raw) return [];
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed.map((item) => String(item).trim()).filter(Boolean);
+    }
+  } catch {
+    // fall back to newline parsing
+  }
+
+  return raw
+    .split(/\r?\n/)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+};
+
 export const getRecords = async (req: any, res: Response) => {
   try {
     const filter =
@@ -14,6 +45,7 @@ export const getRecords = async (req: any, res: Response) => {
     const records = await Record.find(filter)
       .populate("patientId", "fullName patientId")
       .populate("doctorId", "fullName")
+      .populate("issuedByDoctorId", "fullName email")
       .sort({ createdAt: -1 });
 
     res.json(records);
@@ -24,7 +56,36 @@ export const getRecords = async (req: any, res: Response) => {
 
 export const createRecord = async (req: any, res: Response) => {
   try {
-    const { patientId, title, description, fileUrl } = req.body;
+    const requestedPatientId = req.body.patientId;
+    const patientId =
+      req.user.role === "patient" ? req.user.id : requestedPatientId;
+    const {
+      title,
+      description,
+      recordType,
+      issuedDate,
+      issuedByName,
+      fileUrl: legacyFileUrl,
+      attachmentUrls,
+    } = req.body;
+    const uploadedFiles = (req.files as Express.Multer.File[] | undefined) || [];
+    const uploadedAttachments = uploadedFiles.map((file) => ({
+      name: file.originalname,
+      url: `${req.protocol}://${req.get("host")}/uploads/records/${file.filename}`,
+    }));
+    const linkedAttachments = normalizeAttachmentUrls(attachmentUrls).map((url) => ({
+      name: url.split("/").pop() || "Attachment",
+      url,
+    }));
+    const legacyAttachment = legacyFileUrl
+      ? [{ name: "Linked file", url: String(legacyFileUrl).trim() }]
+      : [];
+    const attachments = [
+      ...uploadedAttachments,
+      ...linkedAttachments,
+      ...legacyAttachment,
+    ];
+    const primaryFileUrl = attachments[0]?.url;
 
     if (!patientId || !title) {
       return res.status(400).json({ message: "Patient and title required" });
@@ -33,9 +94,17 @@ export const createRecord = async (req: any, res: Response) => {
     const record = await Record.create({
       patientId,
       doctorId: req.user.role === "doctor" ? req.user.id : req.body.doctorId,
+      issuedByDoctorId: req.user.role === "doctor" ? req.user.id : undefined,
       title,
       description,
-      fileUrl,
+      recordType: recordType || "other",
+      issuedDate: issuedDate || undefined,
+      issuedByName:
+        req.user.role === "doctor"
+          ? req.user.fullName
+          : issuedByName || undefined,
+      fileUrl: primaryFileUrl,
+      attachments,
     });
 
     await createNotification(

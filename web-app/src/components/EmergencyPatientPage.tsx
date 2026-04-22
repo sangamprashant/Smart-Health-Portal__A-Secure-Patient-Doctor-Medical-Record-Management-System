@@ -3,12 +3,15 @@ import { Link, useParams } from "react-router-dom";
 import {
   Activity,
   AlertTriangle,
+  CalendarDays,
   ClipboardList,
   Droplet,
   FileText,
   HeartPulse,
+  Paperclip,
   Phone,
   ShieldCheck,
+  ShieldPlus,
   UserRound,
 } from "lucide-react";
 import _env from "../utils/_env";
@@ -23,6 +26,7 @@ type EmergencyData = {
     gender?: string;
     age?: number;
     phone?: string;
+    dateOfBirth?: string;
     patientId?: string;
     address?: {
       city?: string;
@@ -51,6 +55,29 @@ type EmergencyData = {
         diastolic?: number;
       };
     } | null;
+    fullMedicalRecord?: {
+      doctorNotes?: string;
+      allergies?: string[];
+      diseases?: string[];
+      bloodGroup?: string;
+      emergencyContact?: {
+        name?: string;
+        phone?: string;
+        relation?: string;
+      };
+      dietPlan?: {
+        morning?: string;
+        afternoon?: string;
+        evening?: string;
+        notes?: string;
+      };
+      medications?: {
+        name: string;
+        dosage: string;
+        frequency: string;
+        duration: string;
+      }[];
+    } | null;
     medications: {
       name: string;
       dosage: string;
@@ -61,6 +88,38 @@ type EmergencyData = {
     reports: {
       fileUrl: string;
       type: string;
+      date?: string;
+    }[];
+    uploadedRecords: {
+      _id: string;
+      title: string;
+      description?: string;
+      recordType?: string;
+      issuedDate?: string;
+      issuedByName?: string;
+      fileUrl?: string;
+      attachments?: {
+        name?: string;
+        url?: string;
+      }[];
+      doctorId?: {
+        fullName?: string;
+      };
+      issuedByDoctorId?: {
+        fullName?: string;
+      };
+      createdAt: string;
+    }[];
+    appointments: {
+      _id: string;
+      date: string;
+      time: string;
+      reason: string;
+      status: "pending" | "confirmed" | "completed" | "cancelled";
+      doctorId?: {
+        fullName?: string;
+        email?: string;
+      };
     }[];
   } | null;
 };
@@ -68,6 +127,17 @@ type EmergencyData = {
 const Empty = ({ text }: { text: string }) => (
   <p className="text-sm text-gray-500">No {text} recorded.</p>
 );
+
+const formatDate = (value?: string) =>
+  value ? new Date(value).toLocaleDateString() : "N.A";
+
+const formatRecordType = (value?: string) => {
+  if (!value) return "Other";
+  return value
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+};
 
 const EmergencyPatientPage = () => {
   const { qrCodeId } = useParams();
@@ -156,7 +226,7 @@ const EmergencyPatientPage = () => {
 
           <div className="rounded-lg bg-white px-4 py-3 text-red-700">
             {isDoctorView
-              ? "Doctor access: full emergency record"
+              ? "Doctor/admin access: full patient record"
               : "Public access: critical basics only"}
           </div>
         </div>
@@ -171,6 +241,7 @@ const EmergencyPatientPage = () => {
           <div className="space-y-2 text-sm">
             <p><strong>Age:</strong> {data.patient.age || "N.A"}</p>
             <p><strong>Gender:</strong> {data.patient.gender || "N.A"}</p>
+            <p><strong>Date of birth:</strong> {formatDate(data.patient.dateOfBirth)}</p>
             <p><strong>Location:</strong> {location || "N.A"}</p>
             {isDoctorView && <p><strong>Phone:</strong> {data.patient.phone || "N.A"}</p>}
             {isDoctorView && <p><strong>Email:</strong> {data.patient.email || "N.A"}</p>}
@@ -250,6 +321,19 @@ const EmergencyPatientPage = () => {
 
           <div className="rounded-lg bg-white p-5 shadow-sm">
             <h2 className="mb-4 flex items-center gap-2 text-lg font-bold">
+              <ShieldPlus className="text-red-700" />
+              Full Clinical Record
+            </h2>
+            <div className="space-y-2 text-sm">
+              <p><strong>Blood group:</strong> {data.clinical?.fullMedicalRecord?.bloodGroup || "N.A"}</p>
+              <p><strong>Allergies:</strong> {data.clinical?.fullMedicalRecord?.allergies?.length ? data.clinical.fullMedicalRecord.allergies.join(", ") : "N.A"}</p>
+              <p><strong>Diseases:</strong> {data.clinical?.fullMedicalRecord?.diseases?.length ? data.clinical.fullMedicalRecord.diseases.join(", ") : "N.A"}</p>
+              <p><strong>Doctor notes:</strong> {data.clinical?.doctorNotes || "N.A"}</p>
+            </div>
+          </div>
+
+          <div className="rounded-lg bg-white p-5 shadow-sm">
+            <h2 className="mb-4 flex items-center gap-2 text-lg font-bold">
               <HeartPulse className="text-red-700" />
               Medications
             </h2>
@@ -272,15 +356,20 @@ const EmergencyPatientPage = () => {
           <div className="rounded-lg bg-white p-5 shadow-sm">
             <h2 className="mb-4 flex items-center gap-2 text-lg font-bold">
               <ClipboardList className="text-green-700" />
-              Doctor Notes
+              Diet Plan
             </h2>
-            <p className="text-sm text-gray-700">{data.clinical?.doctorNotes || "N.A"}</p>
+            <div className="space-y-2 text-sm">
+              <p><strong>Morning:</strong> {data.clinical?.fullMedicalRecord?.dietPlan?.morning || "N.A"}</p>
+              <p><strong>Afternoon:</strong> {data.clinical?.fullMedicalRecord?.dietPlan?.afternoon || "N.A"}</p>
+              <p><strong>Evening:</strong> {data.clinical?.fullMedicalRecord?.dietPlan?.evening || "N.A"}</p>
+              <p><strong>Notes:</strong> {data.clinical?.fullMedicalRecord?.dietPlan?.notes || "N.A"}</p>
+            </div>
           </div>
 
-          <div className="rounded-lg bg-white p-5 shadow-sm">
+          <div className="rounded-lg bg-white p-5 shadow-sm lg:col-span-2">
             <h2 className="mb-4 flex items-center gap-2 text-lg font-bold">
               <FileText className="text-blue-700" />
-              Reports
+              Clinical Reports
             </h2>
             {data.clinical?.reports.length ? (
               <div className="space-y-2">
@@ -292,7 +381,7 @@ const EmergencyPatientPage = () => {
                     rel="noreferrer"
                     target="_blank"
                   >
-                    {report.type || "Report"}
+                    {report.type || "Report"} - {formatDate(report.date)}
                   </a>
                 ))}
               </div>
@@ -300,12 +389,95 @@ const EmergencyPatientPage = () => {
               <Empty text="reports" />
             )}
           </div>
+
+          <div className="rounded-lg bg-white p-5 shadow-sm lg:col-span-2">
+            <h2 className="mb-4 flex items-center gap-2 text-lg font-bold">
+              <Paperclip className="text-blue-700" />
+              Uploaded Medical Records
+            </h2>
+            {data.clinical?.uploadedRecords?.length ? (
+              <div className="space-y-4">
+                {data.clinical.uploadedRecords.map((record) => (
+                  <div className="rounded-lg border border-gray-200 p-4" key={record._id}>
+                    <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                      <div>
+                        <p className="font-semibold">{record.title}</p>
+                        <p className="text-sm text-gray-600">{formatRecordType(record.recordType)}</p>
+                        <p className="mt-2 text-sm text-gray-700">{record.description || "No description"}</p>
+                        <div className="mt-2 space-y-1 text-sm text-gray-600">
+                          <p><strong>Issued by:</strong> {record.issuedByDoctorId?.fullName || record.issuedByName || record.doctorId?.fullName || "Patient / External Source"}</p>
+                          <p><strong>Issued date:</strong> {formatDate(record.issuedDate)}</p>
+                          <p><strong>Added on:</strong> {formatDate(record.createdAt)}</p>
+                        </div>
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Attachments: {record.attachments?.length || (record.fileUrl ? 1 : 0)}
+                      </div>
+                    </div>
+
+                    {!!(record.attachments?.length || record.fileUrl) && (
+                      <div className="mt-3 flex flex-wrap gap-3">
+                        {(record.attachments?.length
+                          ? record.attachments
+                          : record.fileUrl
+                            ? [{ name: "Attachment", url: record.fileUrl }]
+                            : []
+                        ).map((attachment, index) => (
+                          attachment.url ? (
+                            <a
+                              className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-blue-700"
+                              href={attachment.url}
+                              key={`${attachment.url}-${index}`}
+                              rel="noreferrer"
+                              target="_blank"
+                            >
+                              {attachment.name || `Attachment ${index + 1}`}
+                            </a>
+                          ) : null
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Empty text="uploaded records" />
+            )}
+          </div>
+
+          <div className="rounded-lg bg-white p-5 shadow-sm lg:col-span-2">
+            <h2 className="mb-4 flex items-center gap-2 text-lg font-bold">
+              <CalendarDays className="text-green-700" />
+              Appointments History
+            </h2>
+            {data.clinical?.appointments?.length ? (
+              <div className="space-y-3">
+                {data.clinical.appointments.map((appointment) => (
+                  <div className="rounded-lg border border-gray-200 p-4" key={appointment._id}>
+                    <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                      <div>
+                        <p className="font-semibold">{appointment.doctorId?.fullName || "Doctor N.A"}</p>
+                        <p className="text-sm text-gray-600">{appointment.doctorId?.email || ""}</p>
+                        <p className="mt-2 text-sm text-gray-700">{appointment.reason}</p>
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        <p><strong>Status:</strong> {appointment.status}</p>
+                        <p><strong>Date:</strong> {formatDate(appointment.date)}</p>
+                        <p><strong>Time:</strong> {appointment.time || "N.A"}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Empty text="appointments" />
+            )}
+          </div>
         </section>
       ) : (
         <section className="mx-auto max-w-6xl px-4 pb-10">
           <div className="rounded-lg border border-blue-200 bg-white p-5 text-sm text-gray-700">
-            Doctors can log in before opening this QR to view medications,
-            reports, health records, and notes.
+            Doctors and admins can log in before opening this QR to view the full patient record, all uploaded records, appointments, reports, health details, and notes.
           </div>
         </section>
       )}

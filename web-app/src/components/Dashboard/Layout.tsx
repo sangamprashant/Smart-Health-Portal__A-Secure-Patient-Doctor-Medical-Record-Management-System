@@ -7,9 +7,12 @@ import React, { useState } from "react";
 import Sidebar, { SidebarMobile } from "./Sidebar";
 import { Button } from "antd";
 import { NotificationPanel } from "../common";
+import { useAuth } from "../../providers/AuthContext";
+import { getUserImage } from "../../hooks/image";
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [mobileOpen, setMobileOpen] = useState(false);
+    const {user} = useAuth()
 
     return (
         <div className="h-screen bg-slate-50 flex overflow-hidden">
@@ -45,20 +48,20 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                             <Menu size={28} />
                         </button>
 
-                        <h1 className="text-xl font-bold text-blue-900">
-                            Patient Profile Dashboard
+                        <h1 className="text-xl font-bold text-blue-900 capitalize">
+                    {user?.role} Dashboard
                         </h1>
                     </div>
 
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
                             <img
-                                src="https://i.pravatar.cc/40"
+                                src={getUserImage(user?.profile_image)}
                                 alt="doctor"
                                 className="w-10 h-10 rounded-full"
                             />
                             <p className="text-sm font-semibold text-gray-700">
-                                Dr. Admin
+                               {user?.fullName}
                             </p>
                         </div>
                         <NotificationPanel/>

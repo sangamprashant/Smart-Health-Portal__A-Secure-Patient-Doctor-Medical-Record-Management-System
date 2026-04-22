@@ -1,8 +1,11 @@
-import { Button, Modal, Input, Select, Form, notification } from "antd";
+import { Button, Modal, Input, Select, Form, notification, QRCode, Space, Typography } from "antd";
 import { useAuth } from "../../providers/AuthContext";
-import { MapPin, Plus, User } from "lucide-react";
-import { useState } from "react";
+import { Copy, ExternalLink, MapPin, Plus, Share2, User } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import _env from "../../utils/_env";
+import { getUserImage } from "../../hooks/image";
+
+const { Text } = Typography;
 
 function ProfileCard() {
     const { user, updateUserData, token } = useAuth();
@@ -14,6 +17,8 @@ function ProfileCard() {
         open: false,
         type: null,
     });
+    const [qrData, setQrData] = useState<{ qrCodeId: string; emergencyNotes?: string } | null>(null);
+    const [qrLoading, setQrLoading] = useState(false);
 
     const [form, setForm] = useState({
         fullName: user?.fullName || "",
@@ -22,6 +27,109 @@ function ProfileCard() {
         city: user?.address?.city || "",
         country: user?.address?.country || "",
     });
+
+    useEffect(() => {
+        setForm({
+            fullName: user?.fullName || "",
+            gender: user?.gender || "",
+            age: user?.age || "",
+            city: user?.address?.city || "",
+            country: user?.address?.country || "",
+        });
+    }, [user]);
+
+    const emergencyUrl = useMemo(() => {
+        if (!qrData?.qrCodeId || typeof window === "undefined") return "";
+        return `${window.location.origin}/emergency/${qrData.qrCodeId}`;
+    }, [qrData?.qrCodeId]);
+
+    const fetchEmergencyQr = async () => {
+        if (!token || user?.role !== "patient") return;
+
+        try {
+            setQrLoading(true);
+            const res = await fetch(`${_env.SERVER_URL}/emergency/me`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                setQrData(data);
+            }
+        } catch {
+            // keep silent when QR is not created yet
+        } finally {
+            setQrLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchEmergencyQr();
+    }, [token, user?.role]);
+
+    const generateEmergencyQr = async () => {
+        try {
+            setQrLoading(true);
+            const res = await fetch(`${_env.SERVER_URL}/emergency/me`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    emergencyNotes: qrData?.emergencyNotes || "",
+                }),
+            });
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.message || "Failed to generate QR code");
+
+            setQrData(data);
+            notification.success({
+                message: "Emergency QR ready",
+                description: "Your shareable emergency access link is now active.",
+            });
+        } catch (error: any) {
+            notification.error({
+                message: "Error",
+                description: error.message,
+            });
+        } finally {
+            setQrLoading(false);
+        }
+    };
+
+    const copyEmergencyLink = async () => {
+        if (!emergencyUrl) return;
+
+        try {
+            await navigator.clipboard.writeText(emergencyUrl);
+            notification.success({ message: "Emergency link copied" });
+        } catch {
+            notification.error({ message: "Unable to copy link" });
+        }
+    };
+
+    const shareEmergencyLink = async () => {
+        if (!emergencyUrl) return;
+
+        try {
+            if (navigator.share) {
+                await navigator.share({
+                    title: `${user?.fullName || "Patient"} emergency QR`,
+                    text: "Open this emergency patient profile.",
+                    url: emergencyUrl,
+                });
+                return;
+            }
+
+            await copyEmergencyLink();
+        } catch {
+            notification.error({ message: "Unable to share emergency link" });
+        }
+    };
 
     const handleFullSave = async () => {
         try {
@@ -108,72 +216,148 @@ function ProfileCard() {
 
     return (
         <>
-            <div className="bg-white rounded-3xl shadow-md p-6 flex flex-col md:flex-row gap-6 items-center">
-                <img
-                    src={user?.profile_image || "/user.png"}
-                    className="w-28 h-28 rounded-2xl object-cover border-3"
-                />
+            <div className="bg-white rounded-3xl shadow-lg p-6 flex flex-col md:flex-row gap-6 items-center border border-gray-100">
 
-                <div className="flex-1">
-                    <h2 className="text-2xl font-bold">{user?.fullName}</h2>
+                {/* 👤 Avatar */}
+                <div className="relative">
+                    <img
+                        src={getUserImage(user?.profile_image)}
+                        className="w-28 h-28 rounded-full  object-cover border-4 border-gray-100"
+                    />
 
-                    <p className="text-gray-600 text-sm mt-2 flex gap-2 flex-wrap">
+                    <span className="absolute bottom-1 right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-white" />
+                </div>
 
+                {/* 🧾 INFO */}
+                <div className="flex-1 w-full text-center md:text-left">
+
+                    <h2 className="text-2xl font-bold text-gray-900">
+                        {user?.fullName}
+                    </h2>
+
+                    <p className="text-sm text-gray-500 mt-1">
+                        {user?.role?.toUpperCase()} • Smart Health User
+                    </p>
+
+                    {/* 🔥 TAGS / DETAILS */}
+                    <div className="flex flex-wrap gap-2 mt-3 justify-center md:justify-start">
+
+                        {/* Gender */}
                         {user?.gender ? (
-                            <span className=" capitalize">{user.gender}</span>
-                        ) : (
-                            <Button
-                                size="small"
-                                icon={<Plus size={14} />}
-                                onClick={() => setPartEdit({ open: true, type: "gender" })}
-                            >
-                                Add Gender
-                            </Button>
-                        )}
-
-                        <span>•</span>
-
-                        {user?.age ? (
-                            <span>Age: {user.age}</span>
-                        ) : (
-                            <Button
-                                size="small"
-                                icon={<Plus size={14} />}
-                                onClick={() => setPartEdit({ open: true, type: "age" })}
-                            >
-                                Add Age
-                            </Button>
-                        )}
-
-                        <span>•</span>
-
-                        {user?.address?.city || user?.address?.country ? (
-                            <span>
-                                {user?.address?.city} {user?.address?.country}
+                            <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs capitalize">
+                                {user.gender}
                             </span>
                         ) : (
                             <Button
                                 size="small"
-                                icon={<Plus size={14} />}
-                                onClick={() => setPartEdit({ open: true, type: "address" })}
+                                icon={<Plus size={12} />}
+                                onClick={() => setPartEdit({ open: true, type: "gender" })}
                             >
-                                Add Address
+                                Gender
                             </Button>
                         )}
-                    </p>
 
-                    <p className="text-blue-900 font-semibold mt-2">
+                        {/* Age */}
+                        {user?.age ? (
+                            <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs">
+                                Age: {user.age}
+                            </span>
+                        ) : (
+                            <Button
+                                size="small"
+                                icon={<Plus size={12} />}
+                                onClick={() => setPartEdit({ open: true, type: "age" })}
+                            >
+                                Age
+                            </Button>
+                        )}
+
+                        {/* Address */}
+                        {user?.address?.city || user?.address?.country ? (
+                            <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
+                                📍 {user?.address?.city} {user?.address?.country}
+                            </span>
+                        ) : (
+                            <Button
+                                size="small"
+                                icon={<Plus size={12} />}
+                                onClick={() => setPartEdit({ open: true, type: "address" })}
+                            >
+                                Address
+                            </Button>
+                        )}
+
+                    </div>
+
+                    {/* ID */}
+                    <p className="text-blue-900 font-semibold mt-3 text-sm">
                         {user?.patientId}
                     </p>
                 </div>
 
-                <button
-                    onClick={() => setOpenProfileModal(true)}
-                    className="px-6 py-2 bg-blue-900 text-white rounded-xl"
-                >
-                    Edit Profile
-                </button>
+                {/* ✏️ EDIT BUTTON */}
+                <div className="w-full md:w-auto">
+                    <Button
+                        type="primary"
+                        size="large"
+                        className="w-full md:w-auto rounded-xl"
+                        onClick={() => setOpenProfileModal(true)}
+                    >
+                        Edit Profile
+                    </Button>
+                </div>
+
             </div>
+
+            {user?.role === "patient" && (
+                <div className="bg-white rounded-3xl shadow-lg p-6 mt-6 border border-gray-100">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                        <div>
+                            <h3 className="text-xl font-bold text-gray-900">Emergency QR Access</h3>
+                            <p className="text-sm text-gray-500 mt-1">
+                                Generate your QR once, then share the link or let staff scan it in emergencies.
+                            </p>
+                        </div>
+
+                        <Space wrap>
+                            <Button type="primary" loading={qrLoading} onClick={generateEmergencyQr}>
+                                {qrData ? "Refresh QR" : "Generate QR"}
+                            </Button>
+                            <Button icon={<Copy size={16} />} disabled={!emergencyUrl} onClick={copyEmergencyLink}>
+                                Copy Link
+                            </Button>
+                            <Button icon={<Share2 size={16} />} disabled={!emergencyUrl} onClick={shareEmergencyLink}>
+                                Share
+                            </Button>
+                            <Button
+                                icon={<ExternalLink size={16} />}
+                                disabled={!emergencyUrl}
+                                onClick={() => window.open(emergencyUrl, "_blank", "noopener,noreferrer")}
+                            >
+                                Open
+                            </Button>
+                        </Space>
+                    </div>
+
+                    {qrData && emergencyUrl && (
+                        <div className="mt-6 flex flex-col gap-4 lg:flex-row lg:items-center">
+                            <div className="border border-gray-200 rounded-2xl p-4 w-fit bg-white">
+                                <QRCode value={emergencyUrl} size={180} />
+                            </div>
+
+                            <div className="min-w-0">
+                                <Text strong className="block text-gray-900">Emergency Link</Text>
+                                <Text copyable={{ text: emergencyUrl }} className="block break-all text-gray-600">
+                                    {emergencyUrl}
+                                </Text>
+                                <p className="text-sm text-gray-500 mt-3">
+                                    Doctors and admins get the full emergency profile after login. Public scan view stays limited.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
 
             <Modal
                 centered

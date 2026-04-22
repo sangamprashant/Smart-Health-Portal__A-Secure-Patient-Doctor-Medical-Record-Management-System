@@ -1,7 +1,10 @@
-﻿import { useEffect, useRef, useState } from "react";
-import { Avatar, List, notification } from "antd";
+import { useEffect, useRef, useState } from "react";
+import { Avatar, notification } from "antd";
+import { io } from "socket.io-client";
+import type { Socket } from "socket.io-client";
 import _env from "../../utils/_env";
 import { useAuth } from "../../providers/AuthContext";
+import { getUserImage } from "../../hooks/image";
 
 type Contact = {
   _id: string;
@@ -14,8 +17,8 @@ type Contact = {
 
 type Message = {
   _id: string;
-  senderId: Contact;
-  receiverId: Contact;
+  senderId: Contact | string;
+  receiverId: Contact | string;
   text: string;
   createdAt: string;
 };
@@ -27,6 +30,25 @@ const Messages = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const socketRef = useRef<Socket | null>(null);
+  const notifiedSocketErrorRef = useRef(false);
+
+  const upsertMessage = (incoming: Message) => {
+    setMessages((prev) => {
+      const exists = prev.some((message) => message._id === incoming._id);
+
+      if (exists) {
+        return prev.map((message) =>
+          message._id === incoming._id ? incoming : message,
+        );
+      }
+
+      return [...prev, incoming].sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      );
+    });
+  };
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -48,7 +70,8 @@ const Messages = () => {
         if (data[0]?._id) setSelectedContact(data[0]);
       } catch (err) {
         notification.error({
-          message: err instanceof Error ? err.message : "Failed to load contacts",
+          message:
+            err instanceof Error ? err.message : "Failed to load contacts",
         });
       }
     };
@@ -70,7 +93,8 @@ const Messages = () => {
       setMessages(data);
     } catch (err) {
       notification.error({
-        message: err instanceof Error ? err.message : "Failed to load messages",
+        message:
+          err instanceof Error ? err.message : "Failed to load messages",
       });
     }
   };
@@ -78,6 +102,60 @@ const Messages = () => {
   useEffect(() => {
     if (selectedContact) fetchMessages(selectedContact._id);
   }, [selectedContact?._id, token]);
+
+  useEffect(() => {
+    if (!token || !user?._id) return;
+
+    const socketServerUrl = _env.SERVER_URL.replace(/\/api\/?$/, "");
+    const socket = io(socketServerUrl, {
+      auth: { token },
+      transports: ["websocket", "polling"],
+    });
+
+    socketRef.current = socket;
+    notifiedSocketErrorRef.current = false;
+
+    const handleIncomingMessage = (message: Message) => {
+      const senderId =
+        typeof message.senderId === "string"
+          ? message.senderId
+          : message.senderId._id;
+      const receiverId =
+        typeof message.receiverId === "string"
+          ? message.receiverId
+          : message.receiverId._id;
+
+      const isActiveConversation =
+        !!selectedContact &&
+        [senderId, receiverId].includes(selectedContact._id) &&
+        [senderId, receiverId].includes(user._id);
+
+      if (isActiveConversation) {
+        upsertMessage(message);
+      }
+    };
+
+    const handleSocketError = () => {
+      if (notifiedSocketErrorRef.current) return;
+
+      notifiedSocketErrorRef.current = true;
+      notification.error({
+        message: "Real-time chat connection failed",
+      });
+    };
+
+    socket.on("message:new", handleIncomingMessage);
+    socket.on("message:sent", handleIncomingMessage);
+    socket.on("connect_error", handleSocketError);
+
+    return () => {
+      socket.off("message:new", handleIncomingMessage);
+      socket.off("message:sent", handleIncomingMessage);
+      socket.off("connect_error", handleSocketError);
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, [selectedContact, token, user?._id]);
 
   const handleSend = async () => {
     if (!token || !selectedContact || !input.trim()) return;
@@ -95,82 +173,150 @@ const Messages = () => {
 
       if (!res.ok) throw new Error(data.message || "Failed to send message");
 
-      setMessages((prev) => [...prev, data]);
+      upsertMessage(data);
       setInput("");
     } catch (err) {
       notification.error({
-        message: err instanceof Error ? err.message : "Failed to send message",
+        message:
+          err instanceof Error ? err.message : "Failed to send message",
       });
     }
   };
 
-  return (
-    <div className="grid h-[80vh] gap-4 p-4 lg:grid-cols-[300px_1fr]">
-      <div className="overflow-hidden rounded-lg border bg-white">
-        <div className="border-b p-3 font-semibold">Contacts</div>
-        <List
-          dataSource={contacts}
-          locale={{ emptyText: "No contacts found" }}
-          renderItem={(contact) => (
-            <List.Item
-              className={`cursor-pointer px-3 ${selectedContact?._id === contact._id ? "bg-blue-50" : ""}`}
-              onClick={() => setSelectedContact(contact)}
-            >
-              <List.Item.Meta
-                avatar={<Avatar src={contact.profile_image}>{contact.fullName[0]}</Avatar>}
-                title={contact.fullName}
-                description={contact.role === "patient" ? contact.patientId : contact.email}
-              />
-            </List.Item>
-          )}
-        />
+return (
+  <div className="h-[calc(100vh-80px)] flex bg-gray-100">
+
+    {/* 📱 CONTACT LIST */}
+    <div
+      className={`
+        ${selectedContact ? "hidden md:flex" : "flex"}
+        w-full md:w-[320px] flex-col border-r bg-white
+      `}
+    >
+      <div className="p-4 font-semibold border-b bg-gray-100">
+        Chats
       </div>
 
-      <div className="flex min-h-0 flex-col overflow-hidden rounded-lg border bg-white">
-        <div className="border-b bg-gray-100 p-3 font-semibold">
-          {selectedContact ? selectedContact.fullName : "Select a contact"}
-        </div>
-
-        <div className="flex-1 space-y-3 overflow-y-auto bg-gray-50 p-3">
-          {messages.map((msg) => {
-            const senderId = typeof msg.senderId === "string" ? msg.senderId : msg.senderId._id;
-            const isMe = senderId === user?._id;
-
-            return (
-              <div key={msg._id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-xs rounded-lg p-2 text-sm ${isMe ? "bg-blue-600 text-white" : "border bg-white"}`}>
-                  <p>{msg.text}</p>
-                  <span className="block text-right text-[10px] opacity-70">
-                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-          <div ref={bottomRef} />
-        </div>
-
-        <div className="flex gap-2 border-t p-3">
-          <input
-            type="text"
-            className="flex-1 rounded border px-3 py-2"
-            placeholder="Type a message..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            disabled={!selectedContact}
-          />
-          <button
-            onClick={handleSend}
-            className="rounded bg-blue-600 px-4 text-white disabled:opacity-60"
-            disabled={!selectedContact || !input.trim()}
+      <div className="flex-1 overflow-y-auto">
+        {contacts.map((contact) => (
+          <div
+            key={contact._id}
+            onClick={() => setSelectedContact(contact)}
+            className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-100 ${
+              selectedContact?._id === contact._id ? "bg-gray-200" : ""
+            }`}
           >
-            Send
-          </button>
-        </div>
+            <Avatar src={getUserImage(contact.profile_image)}>
+              {contact.fullName[0]}
+            </Avatar>
+
+            <div>
+              <p className="font-medium">{contact.fullName}</p>
+              <p className="text-xs text-gray-500">
+                {contact.role}
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
-  );
+
+    {/* 💬 CHAT SECTION */}
+    <div
+      className={`
+        ${selectedContact ? "flex" : "hidden md:flex"}
+        flex-1 flex-col
+      `}
+    >
+      {/* 🔝 HEADER */}
+      <div className="flex items-center gap-3 p-3 border-b bg-white sticky top-0 z-10">
+
+        {/* 🔙 Mobile back */}
+        <button
+          onClick={() => setSelectedContact(null)}
+          className="md:hidden text-lg"
+        >
+          ←
+        </button>
+
+        <Avatar src={getUserImage(selectedContact?.profile_image)} className="border rounded-full">
+          {selectedContact?.fullName?.[0]}
+        </Avatar>
+
+        <div>
+          <p className="font-semibold">
+            {selectedContact?.fullName || "Select chat"}
+          </p>
+          <p className="text-xs text-gray-500">
+            {selectedContact?.role}
+          </p>
+        </div>
+      </div>
+
+      {/* 💬 MESSAGES */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-[#efeae2]">
+
+        {messages.map((msg) => {
+          const senderId =
+            typeof msg.senderId === "string"
+              ? msg.senderId
+              : msg.senderId._id;
+
+          const isMe = senderId === user?._id;
+
+          return (
+            <div
+              key={msg._id}
+              className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+            >
+              <div
+                className={`
+                  max-w-[75%] px-3 py-2 rounded-xl text-sm shadow
+                  ${isMe
+                    ? "bg-[#dcf8c6] text-black rounded-br-none"
+                    : "bg-white rounded-bl-none"}
+                `}
+              >
+                <p>{msg.text}</p>
+
+                <span className="block text-[10px] text-gray-500 text-right mt-1">
+                  {new Date(msg.createdAt).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+
+        <div ref={bottomRef} />
+      </div>
+
+      {/* ✏️ INPUT */}
+      <div className="p-3 bg-white border-t flex items-center gap-2 sticky bottom-0">
+
+        <input
+          type="text"
+          className="flex-1 px-4 py-2 rounded-full border bg-gray-100 focus:outline-none"
+          placeholder="Type a message..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSend()}
+          disabled={!selectedContact}
+        />
+
+        <button
+          onClick={handleSend}
+          disabled={!selectedContact || !input.trim()}
+          className="bg-green-500 text-white px-4 py-2 rounded-full disabled:opacity-50"
+        >
+          Send
+        </button>
+      </div>
+    </div>
+  </div>
+);
 };
 
 export default Messages;

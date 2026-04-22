@@ -10,12 +10,13 @@ import About from './components/home/about';
 import SmartFeatures from './components/home/SmartFeatures';
 import Navbar from './components/Navbar';
 import ScanPage from './components/sacn';
-import { PatientReport, Profile } from './components/user-pages';
+import { AccessibleProfile, PatientReport, Profile } from './components/user-pages';
 import { useAuth } from './providers/AuthContext';
 import { AdminUser } from './components/Admin';
 import { Appointments, BookAppointments, Messages, Settings } from './components/common';
 import { DoctorPatient } from './components/doctors-pages';
 import EmergencyPatientPage from './components/EmergencyPatientPage';
+import _env from './utils/_env';
 
 function App() {
   const { user } = useAuth();
@@ -27,6 +28,8 @@ function App() {
         <Routes>
           <Route path="/:role/dashboard" element={<Profile />} />
           <Route path="/:role/profile" element={<Profile />} />
+          <Route path="/:role/profiles/:userId" element={<AccessibleProfile />} />
+          <Route path="/scan" element={<ScanPage />} />
           <Route path="/:role/settings" element={<Settings />} />
           <Route path="/:role/appointments" element={<Appointments />} />
           <Route path='/:role/appointments/book' element={<BookAppointments />} />
