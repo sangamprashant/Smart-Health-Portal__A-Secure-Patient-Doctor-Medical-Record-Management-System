@@ -15,7 +15,7 @@ import { initSocket } from "./socket";
 // const certPath = path.join(__dirname, "../10.77.96.177+3.pem");
 
 const PORT: number = Number(process.env.PORT) || 5000;
-// const HOST = "0.0.0.0";
+const HOST = "0.0.0.0";
 
 // const getLocalIP = () => {
 //   const nets = os.networkInterfaces();
@@ -31,7 +31,9 @@ const PORT: number = Number(process.env.PORT) || 5000;
 
 const startServer = async () => {
   try {
+    console.log("Connecting to Database...");
     await connectDB();
+    console.log("Database Connected Successfully");
     let server: http.Server | https.Server;
 
     // if (process.env.USE_HTTPS === "true") {
@@ -47,12 +49,11 @@ const startServer = async () => {
     //     console.log(`HTTPS Server running at: https://localhost:${PORT}`);
     //   });
     // } else {
-      server = http.createServer(app);
-      initSocket(server);
-      // server.listen(PORT, HOST, () => {
-      server.listen(PORT, () => {
-        console.log(`HTTP Server running at: http://localhost:${PORT}`);
-      });
+    server = http.createServer(app);
+    initSocket(server);
+    server.listen(PORT, HOST, () => {
+      console.log(`HTTP Server running at: http://localhost:${PORT}`);
+    });
     // }
   } catch (error) {
     console.error("Server Failed to Start:", error);
