@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import _env from "../utils/_env";
+import { useNavigate } from "react-router-dom";
 
 type User = {
   _id: string;
@@ -34,6 +35,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const logout = () => {
     setToken(null);
@@ -41,6 +43,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("user");
+    navigate("/");
   };
 
   useEffect(() => {

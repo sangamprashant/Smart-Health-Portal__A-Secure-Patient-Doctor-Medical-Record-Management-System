@@ -39,7 +39,7 @@ const Sidebar = () => {
 
 export default Sidebar
 
-export const SidebarMobile = () => {
+export const SidebarMobile = ({ onNavigate }: { onNavigate?: () => void }) => {
     const { user } = useAuth();
 
     const role = user?.role as Role
@@ -50,7 +50,13 @@ export const SidebarMobile = () => {
             <SidebarHeader role={role} />
             <nav className="flex flex-col gap-3 text-blue-100 font-medium mt-10">
                 {menuItems.map((item, index) => (
-                    <SidebarItem key={index} icon={item.icon} label={item.label} path={item.path} />
+                    <SidebarItem
+                        key={index}
+                        icon={item.icon}
+                        label={item.label}
+                        path={item.path}
+                        onClick={onNavigate}
+                    />
                 ))}
             </nav>
         </>
@@ -75,13 +81,16 @@ const SidebarItem = ({
     icon,
     label,
     path,
+    onClick,
 }: {
     icon: React.ReactNode;
     label: string;
     path: string;
+    onClick?: () => void;
 }) => (
     <Link
         to={path}
+        onClick={onClick}
         className="flex items-center gap-3 px-8 py-3 rounded-xl cursor-pointer hover:bg-blue-800 transition"
     >
         <span className="text-blue-200">{icon}</span>

@@ -26,6 +26,46 @@ const toDateInputValue = (value?: Date | string) => {
   return date.toISOString().split("T")[0];
 };
 
+const formatDateLabel = (value?: Date | string) => {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toLocaleDateString(undefined, {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+const ProfileDetail = ({
+  label,
+  value,
+  tone = "gray",
+}: {
+  label: string;
+  value?: string | number;
+  tone?: "blue" | "green" | "gray" | "amber" | "indigo";
+}) => {
+  const toneClasses = {
+    blue: "bg-blue-50 text-blue-800 border-blue-100",
+    green: "bg-green-50 text-green-800 border-green-100",
+    gray: "bg-gray-50 text-gray-800 border-gray-100",
+    amber: "bg-amber-50 text-amber-800 border-amber-100",
+    indigo: "bg-indigo-50 text-indigo-800 border-indigo-100",
+  };
+
+  return (
+    <div className={`min-w-[8.5rem] rounded-xl border px-3 py-2 text-left ${toneClasses[tone]}`}>
+      <div className="text-[11px] font-semibold uppercase tracking-normal opacity-70">{label}</div>
+      <div className="mt-0.5 break-words text-sm font-semibold capitalize">
+        {value || <span className="normal-case text-gray-400">Not added</span>}
+      </div>
+    </div>
+  );
+};
+
 function ProfileCard() {
   const { user, updateUserData, token } = useAuth();
   const imageInputRef = useRef<HTMLInputElement | null>(null);
@@ -328,16 +368,24 @@ function ProfileCard() {
             {user?.fullName}
           </h2>
 
-          <p className="text-sm text-gray-500 mt-1">
-            {user?.role?.toUpperCase()} | Smart Health User
-          </p>
+          <p className="text-sm text-gray-500 mt-1">Smart Health User Profile</p>
 
-          <div className="flex flex-wrap gap-2 mt-3 justify-center md:justify-start">
-            {user?.gender ? (
-              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs capitalize">
-                {user.gender}
-              </span>
-            ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 mt-4">
+            <ProfileDetail label="Account Role" value={user?.role} tone="blue" />
+            <ProfileDetail label="Full Name" value={user?.fullName} tone="gray" />
+            <ProfileDetail label="Email Address" value={user?.email} tone="gray" />
+            <ProfileDetail label="Gender" value={user?.gender} tone="indigo" />
+            <ProfileDetail label="Age" value={user?.age ? `${user.age} years` : ""} tone="green" />
+            <ProfileDetail label="Phone Number" value={user?.phone} tone="amber" />
+            <ProfileDetail label="Date of Birth" value={formatDateLabel(user?.dateOfBirth)} tone="gray" />
+            <ProfileDetail label="Address" value={locationLabel} tone="gray" />
+            {user?.patientId && (
+              <ProfileDetail label="Patient ID" value={user.patientId} tone="blue" />
+            )}
+          </div>
+
+          <div className="flex flex-wrap gap-2 mt-4 justify-center md:justify-start">
+            {!user?.gender && (
               <Button
                 size="small"
                 icon={<Plus size={12} />}
@@ -347,11 +395,7 @@ function ProfileCard() {
               </Button>
             )}
 
-            {user?.age ? (
-              <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs">
-                Age: {user.age}
-              </span>
-            ) : (
+            {!user?.age && (
               <Button
                 size="small"
                 icon={<Plus size={12} />}
@@ -361,11 +405,7 @@ function ProfileCard() {
               </Button>
             )}
 
-            {locationLabel ? (
-              <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
-                {locationLabel}
-              </span>
-            ) : (
+            {!locationLabel && (
               <Button
                 size="small"
                 icon={<Plus size={12} />}
@@ -374,19 +414,7 @@ function ProfileCard() {
                 Address
               </Button>
             )}
-
-            {user?.phone && (
-              <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs">
-                {user.phone}
-              </span>
-            )}
           </div>
-
-          {user?.patientId && (
-            <p className="text-blue-900 font-semibold mt-3 text-sm">
-              {user.patientId}
-            </p>
-          )}
         </div>
 
         <div className="w-full md:w-auto">

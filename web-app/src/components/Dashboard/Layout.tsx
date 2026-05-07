@@ -12,7 +12,7 @@ import { getUserImage } from "../../hooks/image";
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [mobileOpen, setMobileOpen] = useState(false);
-    const {user} = useAuth()
+    const { user } = useAuth()
 
     return (
         <div className="h-screen bg-slate-50 flex overflow-hidden">
@@ -31,7 +31,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                         >
                             <X size={28} />
                         </button>
-                        <SidebarMobile />
+                        <SidebarMobile onNavigate={() => setMobileOpen(false)} />
                     </div>
                 </div>
             )}
@@ -48,8 +48,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                             <Menu size={28} />
                         </button>
 
-                        <h1 className="text-xl font-bold text-blue-900 capitalize">
-                    {user?.role} Dashboard
+                        <h1 className="text-xl font-bold text-blue-900 capitalize hidden lg:block">
+                            {user?.role} Dashboard
                         </h1>
                     </div>
 
@@ -61,10 +61,10 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                                 className="w-10 h-10 rounded-full"
                             />
                             <p className="text-sm font-semibold text-gray-700">
-                               {user?.fullName}
+                                {user?.fullName}
                             </p>
                         </div>
-                        <NotificationPanel/>
+                        <NotificationPanel />
                     </div>
                 </header>
 
@@ -145,12 +145,12 @@ export const Card = ({
 }: {
     title: string;
     children: React.ReactNode;
-    onEditClick:()=>void
+    onEditClick: () => void
 }) => (
     <div className="bg-white rounded-2xl shadow-sm p-6">
         <div className="flex justify-between items-center">
             <h3 className="font-bold text-gray-900 mb-4">{title}</h3>
-            <Button type="dashed" size="small" icon={<Edit size={14} color="#99a1af " className="text-gray-400" />}onClick={onEditClick}  />
+            <Button type="dashed" size="small" icon={<Edit size={14} color="#99a1af " className="text-gray-400" />} onClick={onEditClick} />
         </div>
         <div className="space-y-3">{children}</div>
     </div>
