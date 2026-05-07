@@ -16,12 +16,15 @@ import {
 } from "lucide-react";
 import _env from "../utils/_env";
 import { useAuth } from "../providers/AuthContext";
+import { getUserImage } from "../hooks/image";
 
 type EmergencyData = {
   qrCodeId: string;
   accessLevel: "public" | "doctor";
   patient: {
+    _id?: string;
     fullName: string;
+    profile_image?: string;
     email?: string;
     gender?: string;
     age?: number;
@@ -78,6 +81,12 @@ type EmergencyData = {
         duration: string;
       }[];
     } | null;
+    dietPlan?: {
+      morning?: string;
+      afternoon?: string;
+      evening?: string;
+      notes?: string;
+    } | null;
     medications: {
       name: string;
       dosage: string;
@@ -117,8 +126,10 @@ type EmergencyData = {
       reason: string;
       status: "pending" | "confirmed" | "completed" | "cancelled";
       doctorId?: {
+        _id?: string;
         fullName?: string;
         email?: string;
+        profile_image?: string;
       };
     }[];
   } | null;
@@ -208,20 +219,29 @@ const EmergencyPatientPage = () => {
   }
 
   const isDoctorView = data.accessLevel === "doctor";
+  const dietPlan = data.clinical?.dietPlan || data.clinical?.fullMedicalRecord?.dietPlan;
+  const doctorNotes = data.clinical?.doctorNotes || data.clinical?.fullMedicalRecord?.doctorNotes;
 
   return (
     <main className="min-h-screen bg-red-50 text-gray-900">
       <section className="bg-red-700 px-4 py-8 text-white">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-red-100">
-              <ShieldCheck size={18} />
-              Emergency Patient Profile
-            </p>
-            <h1 className="mt-2 text-3xl font-bold">{data.patient.fullName}</h1>
-            <p className="mt-1 text-red-100">
-              {data.patient.patientId || data.qrCodeId}
-            </p>
+          <div className="flex items-center gap-4">
+            <img
+              src={getUserImage(data.patient.profile_image)}
+              alt={data.patient.fullName}
+              className="h-20 w-20 rounded-full border-4 border-white/30 object-cover shadow-lg"
+            />
+            <div>
+              <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-red-100">
+                <ShieldCheck size={18} />
+                Emergency Patient Profile
+              </p>
+              <h1 className="mt-2 text-3xl font-bold">{data.patient.fullName}</h1>
+              <p className="mt-1 text-red-100">
+                {data.patient.patientId || data.qrCodeId}
+              </p>
+            </div>
           </div>
 
           <div className="rounded-lg bg-white px-4 py-3 text-red-700">
@@ -328,7 +348,7 @@ const EmergencyPatientPage = () => {
               <p><strong>Blood group:</strong> {data.clinical?.fullMedicalRecord?.bloodGroup || "N.A"}</p>
               <p><strong>Allergies:</strong> {data.clinical?.fullMedicalRecord?.allergies?.length ? data.clinical.fullMedicalRecord.allergies.join(", ") : "N.A"}</p>
               <p><strong>Diseases:</strong> {data.clinical?.fullMedicalRecord?.diseases?.length ? data.clinical.fullMedicalRecord.diseases.join(", ") : "N.A"}</p>
-              <p><strong>Doctor notes:</strong> {data.clinical?.doctorNotes || "N.A"}</p>
+              <p><strong>Doctor notes:</strong> {doctorNotes || "N.A"}</p>
             </div>
           </div>
 
@@ -359,10 +379,10 @@ const EmergencyPatientPage = () => {
               Diet Plan
             </h2>
             <div className="space-y-2 text-sm">
-              <p><strong>Morning:</strong> {data.clinical?.fullMedicalRecord?.dietPlan?.morning || "N.A"}</p>
-              <p><strong>Afternoon:</strong> {data.clinical?.fullMedicalRecord?.dietPlan?.afternoon || "N.A"}</p>
-              <p><strong>Evening:</strong> {data.clinical?.fullMedicalRecord?.dietPlan?.evening || "N.A"}</p>
-              <p><strong>Notes:</strong> {data.clinical?.fullMedicalRecord?.dietPlan?.notes || "N.A"}</p>
+              <p><strong>Morning:</strong> {dietPlan?.morning || "N.A"}</p>
+              <p><strong>Afternoon:</strong> {dietPlan?.afternoon || "N.A"}</p>
+              <p><strong>Evening:</strong> {dietPlan?.evening || "N.A"}</p>
+              <p><strong>Notes:</strong> {dietPlan?.notes || "N.A"}</p>
             </div>
           </div>
 
@@ -455,10 +475,17 @@ const EmergencyPatientPage = () => {
                 {data.clinical.appointments.map((appointment) => (
                   <div className="rounded-lg border border-gray-200 p-4" key={appointment._id}>
                     <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                      <div>
-                        <p className="font-semibold">{appointment.doctorId?.fullName || "Doctor N.A"}</p>
-                        <p className="text-sm text-gray-600">{appointment.doctorId?.email || ""}</p>
-                        <p className="mt-2 text-sm text-gray-700">{appointment.reason}</p>
+                      <div className="flex items-start gap-3">
+                        <img
+                          src={getUserImage(appointment.doctorId?.profile_image)}
+                          alt={appointment.doctorId?.fullName || "Doctor"}
+                          className="h-12 w-12 rounded-full object-cover border border-gray-200"
+                        />
+                        <div>
+                          <p className="font-semibold">{appointment.doctorId?.fullName || "Doctor N.A"}</p>
+                          <p className="text-sm text-gray-600">{appointment.doctorId?.email || ""}</p>
+                          <p className="mt-2 text-sm text-gray-700">{appointment.reason}</p>
+                        </div>
                       </div>
                       <div className="text-sm text-gray-600">
                         <p><strong>Status:</strong> {appointment.status}</p>

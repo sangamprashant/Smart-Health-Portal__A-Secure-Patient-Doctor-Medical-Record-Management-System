@@ -26,6 +26,7 @@ function App() {
     return (
       <Layout>
         <Routes>
+          <Route path="/" element={<Profile />} />
           <Route path="/:role/dashboard" element={<Profile />} />
           <Route path="/:role/profile" element={<Profile />} />
           <Route path="/:role/profiles/:userId" element={<AccessibleProfile />} />

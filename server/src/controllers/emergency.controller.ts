@@ -7,6 +7,9 @@ import Record from "../models/record.model";
 import Appointment from "../models/appointment.model";
 import User from "../models/user.model";
 
+const normalizeText = (value: unknown) =>
+  typeof value === "string" ? value.trim() : "";
+
 const publicPatientFields =
   "fullName role profile_image gender age address patientId";
 
@@ -49,15 +52,15 @@ const buildEmergencyPayload = async (qrCodeId: string, viewerRole?: string) => {
 
   const uploadedRecords = canViewClinicalDetails
     ? await Record.find({ patientId: patient._id })
-        .populate("doctorId", "fullName email")
-        .populate("issuedByDoctorId", "fullName email")
+        .populate("doctorId", "fullName email profile_image")
+        .populate("issuedByDoctorId", "fullName email profile_image")
         .sort({ issuedDate: -1, createdAt: -1 })
         .lean()
     : [];
 
   const appointments = canViewClinicalDetails
     ? await Appointment.find({ patientId: patient._id })
-        .populate("doctorId", "fullName email")
+        .populate("doctorId", "fullName email profile_image")
         .sort({ date: -1, createdAt: -1 })
         .lean()
     : [];
@@ -140,7 +143,7 @@ export const ensureMyEmergencyQr = async (req: any, res: Response) => {
           qrCodeId: crypto.randomBytes(12).toString("hex"),
           active: true,
         },
-        emergencyNotes: req.body?.emergencyNotes || "",
+        emergencyNotes: normalizeText(req.body?.emergencyNotes),
       },
       { new: true, upsert: true },
     );

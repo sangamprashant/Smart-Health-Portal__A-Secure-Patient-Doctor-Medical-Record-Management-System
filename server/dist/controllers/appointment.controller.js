@@ -68,8 +68,8 @@ const getAppointments = async (req, res) => {
             ? {}
             : { $or: [{ patientId: user.id }, { doctorId: user.id }] };
         const appointments = await appointment_model_1.default.find(filter)
-            .populate("patientId", "fullName email")
-            .populate("doctorId", "fullName email");
+            .populate("patientId", "fullName email profile_image")
+            .populate("doctorId", "fullName email profile_image");
         res.json(appointments);
     }
     catch {
@@ -100,6 +100,11 @@ const updateAppointmentStatus = async (req, res) => {
         }
         appointment.status = status;
         await appointment.save();
+        const recipientId = isDoctor
+            ? appointment.patientId.toString()
+            : appointment.doctorId.toString();
+        const actor = await user_model_1.default.findById(req.user.id).select("fullName").lean();
+        await (0, notification_controller_1.createNotification)(recipientId, "Appointment Updated", `${actor?.fullName || "A user"} marked the appointment as ${status}`, "appointment");
         res.json(appointment);
     }
     catch (error) {

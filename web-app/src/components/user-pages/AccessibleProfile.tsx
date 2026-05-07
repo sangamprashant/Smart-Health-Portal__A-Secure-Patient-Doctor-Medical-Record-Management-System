@@ -55,8 +55,10 @@ type ClinicalMedicalRecord = {
   doctorNotes?: string;
   isEmergencyAccessible?: boolean;
   doctorId?: {
+    _id?: string;
     fullName?: string;
     email?: string;
+    profile_image?: string;
   };
   emergencyContact?: {
     name?: string;
@@ -97,11 +99,15 @@ type UploadedRecord = {
   }>;
   createdAt: string;
   doctorId?: {
+    _id?: string;
     fullName?: string;
+    profile_image?: string;
   };
   issuedByDoctorId?: {
+    _id?: string;
     fullName?: string;
     email?: string;
+    profile_image?: string;
   };
 };
 
@@ -112,9 +118,17 @@ type Appointment = {
   reason: string;
   status: "pending" | "confirmed" | "completed" | "cancelled";
   doctorId?: {
+    _id?: string;
     fullName?: string;
     email?: string;
+    profile_image?: string;
   };
+};
+
+type EmergencyAccessSummary = {
+  qrCodeId?: string;
+  emergencyNotes?: string;
+  active?: boolean;
 };
 
 const formatDate = (value?: string) =>
@@ -149,6 +163,7 @@ const AccessibleProfile = () => {
     user: ProfileUser;
     healthRecord: HealthRecord | null;
     medicalRecord: ClinicalMedicalRecord | null;
+    emergencyAccess: EmergencyAccessSummary | null;
     records: UploadedRecord[];
     appointments: Appointment[];
   } | null>(null);
@@ -193,7 +208,7 @@ const AccessibleProfile = () => {
     return <Empty description="Profile not found" />;
   }
 
-  const { user, healthRecord, medicalRecord, records, appointments } = data;
+  const { user, healthRecord, medicalRecord, emergencyAccess, records, appointments } = data;
 
   return (
     <div className="p-6 space-y-6">
@@ -229,8 +244,19 @@ const AccessibleProfile = () => {
           <Descriptions.Item label="Address">
             {[user.address?.city, user.address?.state, user.address?.country].filter(Boolean).join(", ") || "N.A"}
           </Descriptions.Item>
-          <Descriptions.Item label="Primary Doctor">
-            {medicalRecord?.doctorId?.fullName || "N.A"}
+                  <Descriptions.Item label="Primary Doctor">
+            <div className="flex items-center gap-3">
+              {medicalRecord?.doctorId?.fullName ? (
+                <>
+                  <Avatar src={getUserImage(medicalRecord.doctorId.profile_image)} size={36}>
+                    {medicalRecord.doctorId.fullName?.[0]}
+                  </Avatar>
+                  <span>{medicalRecord.doctorId.fullName}</span>
+                </>
+              ) : (
+                "N.A"
+              )}
+            </div>
           </Descriptions.Item>
         </Descriptions>
       </Card>
@@ -295,6 +321,11 @@ const AccessibleProfile = () => {
                   <Descriptions.Item label="Doctor Notes">
                     <Paragraph style={{ marginBottom: 0 }}>
                       {medicalRecord?.doctorNotes || "N.A"}
+                    </Paragraph>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Emergency Notes">
+                    <Paragraph style={{ marginBottom: 0 }}>
+                      {emergencyAccess?.emergencyNotes || "N.A"}
                     </Paragraph>
                   </Descriptions.Item>
                   <Descriptions.Item label="Last Updated">
@@ -431,12 +462,17 @@ const AccessibleProfile = () => {
                 {appointments.map((appointment) => (
                   <Card key={appointment._id} size="small">
                     <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                      <div>
-                        <Text strong>{appointment.doctorId?.fullName || "Doctor N.A"}</Text>
-                        <div className="text-sm text-gray-500">{appointment.doctorId?.email || ""}</div>
-                        <Paragraph style={{ marginTop: 8, marginBottom: 0 }}>
-                          {appointment.reason}
-                        </Paragraph>
+                      <div className="flex items-start gap-3">
+                        <Avatar src={getUserImage(appointment.doctorId?.profile_image)} size={44}>
+                          {appointment.doctorId?.fullName?.[0]}
+                        </Avatar>
+                        <div>
+                          <Text strong>{appointment.doctorId?.fullName || "Doctor N.A"}</Text>
+                          <div className="text-sm text-gray-500">{appointment.doctorId?.email || ""}</div>
+                          <Paragraph style={{ marginTop: 8, marginBottom: 0 }}>
+                            {appointment.reason}
+                          </Paragraph>
+                        </div>
                       </div>
 
                       <div className="text-left md:text-right">

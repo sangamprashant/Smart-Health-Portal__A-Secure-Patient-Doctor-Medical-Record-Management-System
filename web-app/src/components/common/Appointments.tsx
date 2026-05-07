@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { Modal, Button, notification } from "antd";
+import { Modal, Button, Avatar, notification } from "antd";
 import { useNavigate } from "react-router-dom";
 import {
   CalendarDays,
@@ -12,11 +12,13 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../providers/AuthContext";
 import _env from "../../utils/_env";
+import { getUserImage } from "../../hooks/image";
 
 type Person = {
   _id: string;
   fullName: string;
   email?: string;
+  profile_image?: string;
 };
 
 type Appointment = {
@@ -169,7 +171,7 @@ const Appointments = () => {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredAppointments.map((appt) => {
-            const otherPerson = user?.role === "doctor" ? appt.patientId.fullName : appt.doctorId.fullName;
+            const otherPerson = user?.role === "doctor" ? appt.patientId : appt.doctorId;
 
             return (
               <button
@@ -187,7 +189,12 @@ const Appointments = () => {
                   </span>
                 </div>
 
-                <p className="text-sm text-gray-500">{otherPerson}</p>
+                <div className="flex items-center gap-3">
+                  <Avatar src={getUserImage(otherPerson?.profile_image)}>
+                    {otherPerson?.fullName?.[0]}
+                  </Avatar>
+                  <p className="text-sm text-gray-500">{otherPerson?.fullName || "N.A"}</p>
+                </div>
 
                 <div className="flex justify-between text-sm text-gray-600">
                   <div className="flex items-center gap-1">
@@ -210,9 +217,18 @@ const Appointments = () => {
           <div className="flex flex-col gap-4">
             <h3 className="text-lg font-semibold">Appointment Details</h3>
             <div className="flex items-center gap-2"><FileText size={18} />{selected.reason}</div>
-            <div className="flex items-center gap-2">
-              {user?.role === "doctor" ? <User size={18} /> : <Stethoscope size={18} />}
-              {user?.role === "doctor" ? selected.patientId.fullName : selected.doctorId.fullName}
+            <div className="flex items-center gap-3">
+              <Avatar
+                src={getUserImage(
+                  user?.role === "doctor" ? selected.patientId.profile_image : selected.doctorId.profile_image,
+                )}
+              >
+                {(user?.role === "doctor" ? selected.patientId.fullName : selected.doctorId.fullName)?.[0]}
+              </Avatar>
+              <div className="flex items-center gap-2">
+                {user?.role === "doctor" ? <User size={18} /> : <Stethoscope size={18} />}
+                {user?.role === "doctor" ? selected.patientId.fullName : selected.doctorId.fullName}
+              </div>
             </div>
             <div className="flex items-center gap-2"><CalendarDays size={18} />{new Date(selected.date).toLocaleDateString()}</div>
             <div className="flex items-center gap-2"><Clock size={18} />{selected.time}</div>

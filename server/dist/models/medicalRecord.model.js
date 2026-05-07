@@ -46,10 +46,10 @@ const medicalRecordSchema = new mongoose_1.Schema({
     },
     medications: [
         {
-            name: { type: String, required: true },
-            dosage: { type: String, required: true },
-            frequency: { type: String, required: true },
-            duration: { type: String, required: true },
+            name: { type: String, trim: true },
+            dosage: { type: String, trim: true },
+            frequency: { type: String, trim: true },
+            duration: { type: String, trim: true },
         },
     ],
     dietPlan: {
@@ -60,7 +60,8 @@ const medicalRecordSchema = new mongoose_1.Schema({
     },
     doctorNotes: {
         type: String,
-        required: true,
+        default: "",
+        trim: true,
     },
     // 🔥 New fields
     allergies: [String],

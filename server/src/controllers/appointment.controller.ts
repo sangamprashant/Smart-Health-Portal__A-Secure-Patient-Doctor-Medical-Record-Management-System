@@ -82,8 +82,8 @@ export const getAppointments: RequestHandler = async (req, res) => {
         : { $or: [{ patientId: user.id }, { doctorId: user.id }] };
 
     const appointments = await Appointment.find(filter)
-      .populate("patientId", "fullName email")
-      .populate("doctorId", "fullName email");
+      .populate("patientId", "fullName email profile_image")
+      .populate("doctorId", "fullName email profile_image");
 
     res.json(appointments);
 
@@ -122,6 +122,18 @@ export const updateAppointmentStatus = async (req: any, res: Response) => {
 
     appointment.status = status;
     await appointment.save();
+
+    const recipientId = isDoctor
+      ? appointment.patientId.toString()
+      : appointment.doctorId.toString();
+    const actor = await User.findById(req.user.id).select("fullName").lean();
+
+    await createNotification(
+      recipientId,
+      "Appointment Updated",
+      `${actor?.fullName || "A user"} marked the appointment as ${status}`,
+      "appointment",
+    );
 
     res.json(appointment);
   } catch (error) {

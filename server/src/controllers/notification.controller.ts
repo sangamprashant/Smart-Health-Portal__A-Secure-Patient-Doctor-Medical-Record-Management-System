@@ -42,8 +42,29 @@ export const markAsRead = async (req: any, res: Response) => {
       { new: true },
     );
 
+    if (notification) {
+      emitToUser(req.user.id, "notification:read", {
+        id: notification._id.toString(),
+      });
+    }
+
     res.json(notification);
   } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+export const markAllAsRead = async (req: any, res: Response) => {
+  try {
+    await Notification.updateMany(
+      { userId: req.user.id, isRead: false },
+      { isRead: true },
+    );
+
+    emitToUser(req.user.id, "notification:read-all", {});
+
+    res.json({ message: "All notifications marked as read" });
+  } catch {
     res.status(500).json({ message: "Server Error" });
   }
 };

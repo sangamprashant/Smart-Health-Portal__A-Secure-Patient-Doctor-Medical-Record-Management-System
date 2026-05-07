@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createRecord = exports.getRecords = void 0;
 const record_model_1 = __importDefault(require("../models/record.model"));
 const notification_controller_1 = require("./notification.controller");
+const user_model_1 = __importDefault(require("../models/user.model"));
 const normalizeAttachmentUrls = (value) => {
     if (!value)
         return [];
@@ -78,6 +79,9 @@ const createRecord = async (req, res) => {
         if (!patientId || !title) {
             return res.status(400).json({ message: "Patient and title required" });
         }
+        const doctorUser = req.user.role === "doctor"
+            ? await user_model_1.default.findById(req.user.id).select("fullName").lean()
+            : null;
         const record = await record_model_1.default.create({
             patientId,
             doctorId: req.user.role === "doctor" ? req.user.id : req.body.doctorId,
@@ -87,7 +91,7 @@ const createRecord = async (req, res) => {
             recordType: recordType || "other",
             issuedDate: issuedDate || undefined,
             issuedByName: req.user.role === "doctor"
-                ? req.user.fullName
+                ? doctorUser?.fullName
                 : issuedByName || undefined,
             fileUrl: primaryFileUrl,
             attachments,

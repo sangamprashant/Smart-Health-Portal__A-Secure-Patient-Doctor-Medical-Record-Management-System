@@ -9,5 +9,6 @@ const auth_middleware_1 = require("../middleware/auth.middleware");
 const router = express_1.default.Router();
 router.get("/me", auth_middleware_1.protect, emergency_controller_1.getMyEmergencyQr);
 router.post("/me", auth_middleware_1.protect, emergency_controller_1.ensureMyEmergencyQr);
+router.put("/me", auth_middleware_1.protect, emergency_controller_1.ensureMyEmergencyQr);
 router.get("/:qrCodeId", auth_middleware_1.optionalProtect, emergency_controller_1.getEmergencyPatient);
 exports.default = router;

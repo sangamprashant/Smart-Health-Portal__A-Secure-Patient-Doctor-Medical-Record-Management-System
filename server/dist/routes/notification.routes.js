@@ -9,5 +9,6 @@ const auth_middleware_1 = require("../middleware/auth.middleware");
 const router = express_1.default.Router();
 router.use(auth_middleware_1.protect);
 router.get("/", notification_controller_1.getNotifications);
+router.put("/read-all", notification_controller_1.markAllAsRead);
 router.put("/:id/read", notification_controller_1.markAsRead);
 exports.default = router;

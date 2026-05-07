@@ -10,6 +10,7 @@ const router = express.Router();
 
 router.get("/me", protect, getMyEmergencyQr);
 router.post("/me", protect, ensureMyEmergencyQr);
+router.put("/me", protect, ensureMyEmergencyQr);
 router.get("/:qrCodeId", optionalProtect, getEmergencyPatient);
 
 export default router;

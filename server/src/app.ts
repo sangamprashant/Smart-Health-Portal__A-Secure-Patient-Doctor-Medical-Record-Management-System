@@ -21,22 +21,10 @@ const app = express();
 // ];
 
 app.use(
-  // cors({
-  //   origin: (origin, callback) => {
-  //     if (!origin || allowedOrigins.includes(origin)) {
-  //       callback(null, true);
-  //     } else {
-  //       callback(new Error("Not allowed by CORS"));
-  //     }
-  //   },
-  //   credentials: true,
-  // })
-
-  cors(), // allowing all.
+  cors(),
 );
 
 /* Middleware */
-app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
